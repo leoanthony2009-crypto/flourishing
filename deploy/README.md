@@ -12,15 +12,16 @@ repository root — run `npm run build`, and `npm run check` to confirm it is in
    output directory `.`.
 3. Open the URL on a phone → "Add to Home Screen" installs it as a standalone app.
 
-**After the first deploy**, two settings outside this repo, or nobody can use the app:
+Live at **https://flourishing-sage.vercel.app** (`/inbox` for the central team).
 
-1. Vercel → Settings → **Deployment Protection → Vercel Authentication** → *Only Preview
-   Deployments*. The default (*Standard Protection*) puts a Vercel login in front of the
-   production URL as well.
-2. Supabase → Authentication → **URL Configuration** → set *Site URL* and *Redirect URLs* to
-   the deployed origin. Magic links go to `http://localhost:3000` until you do.
+Hand out that URL, not the `…-wendell-s-projects-….vercel.app` or `…-git-main-….vercel.app`
+ones — Vercel Authentication gates those by default, so they ask for a Vercel login. The
+canonical production domain is exempt and public.
 
-See `SETUP.md`.
+One setting still worth doing: Supabase → Authentication → **URL Configuration** → set
+*Site URL* and *Redirect URLs* to `https://flourishing-sage.vercel.app`. Magic links point at
+`http://localhost:3000` until you do — the sign-in screen's "The link didn't work" fallback
+covers it meanwhile, but setting it means nobody has to paste anything. See `SETUP.md`.
 
 ## What's inside
 
