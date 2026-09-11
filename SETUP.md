@@ -1,8 +1,11 @@
 # Bloom Principal Pulse — setup and status
 
-The app is built, wired to Supabase and verified. **Two dashboard settings are left**, both
-listed under "Before the first principal signs in" — neither can be done through the tooling
-available here.
+**Live at https://flourishing-sage.vercel.app** — public, no login wall, serving the current
+build. `/inbox` is the central-team page.
+
+Verified by an unauthenticated request made from outside any Vercel session: `200`, 3,233,372
+bytes, byte-identical to the local build, with the Supabase project ref, the magic-link
+sign-in and the paste-a-link fallback all present and the old localStorage demo gone.
 
 ## Supabase project
 
@@ -142,21 +145,24 @@ Vercel's zero-config would otherwise look for a `public/` folder and fail with
 works if Root Directory is set to `deploy` instead — Vercel reads whichever file sits in the
 configured root.
 
-### Turn off Vercel Authentication for production
+### Which URL to hand out
 
-**A green build is not enough.** New Vercel projects default to Deployment Protection →
-Vercel Authentication → *Standard Protection*, which the API reports as
-`ssoProtection: { enabled: true, deploymentType: "all_except_custom_domains" }`. It gates every
-deployment URL and exempts only custom domains — and this project has none, so the production
-`.vercel.app` URL is gated too. A principal opening the link is bounced to `vercel.com/sso-api`
-and has to log in to Vercel, which none of them can do.
+The project has Deployment Protection → Vercel Authentication on *Standard Protection*
+(`ssoProtection: { enabled: true, deploymentType: "all_except_custom_domains" }`). That gates
+the **deployment and team-slug URLs** but **not** the canonical production domain. Confirmed by
+unauthenticated request:
 
-Vercel project → **Settings → Deployment Protection → Vercel Authentication** → set to
-**Only Preview Deployments** (or Disabled), and Save.
+| URL | Result |
+|---|---|
+| `flourishing-sage.vercel.app` | **200, serves the app** — give people this one |
+| `flourishing-wendell-s-projects-…vercel.app` | 302 → `vercel.com/sso-api`, Vercel login |
+| `flourishing-git-main-…vercel.app` | 302 → `vercel.com/sso-api`, Vercel login |
 
-That is safe here: the app has no public read surface of its own. Sign-in is a magic link
-limited to `pilot_allowlist`, every table is behind RLS, and the anonymous role reads zero rows
-from all of them (verified above). Vercel's login page was never what protected the data.
+So there is nothing to turn off. Use `flourishing-sage.vercel.app`; the other two are internal
+and stay protected, which is the sensible default.
+
+If you later add a custom domain it is exempt too, and if you ever want the team-slug URLs open
+as well, set Vercel Authentication to *Only Preview Deployments*.
 
 ## Deliberately not built
 
@@ -183,8 +189,9 @@ Two settings, both in the Supabase dashboard, both unavailable to the tooling he
    `tailor` returns `{status:'error'}` on every call. The client already degrades correctly:
    it shows the evidence-based default idea with an explanation, so nothing looks broken.
 
-2. **Auth URL configuration** — Authentication → URL Configuration. Set *Site URL* to the
-   deployed origin and add it to *Redirect URLs*. The default is `http://localhost:3000`, so
+2. **Auth URL configuration** — Authentication → URL Configuration. Set *Site URL* to
+   `https://flourishing-sage.vercel.app` and add `https://flourishing-sage.vercel.app/**` to
+   *Redirect URLs*. The default is `http://localhost:3000`, so
    until this is set the link in the email sends people to localhost.
 
    This is no longer a hard blocker: the sign-in screen has a **"The link didn't work"**
