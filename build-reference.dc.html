@@ -12,9 +12,6 @@
 <meta name="theme-color" content="#F6F5F0">
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script src="./image-slot.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
-<script>window.BLOOM_SUPABASE = { url: "https://phnpteeujuaqebzteacd.supabase.co", key: "sb_publishable_SzTl41P5xSLODN4juR-Hwg_Q9BWkfS-" };</script>
-<script src="./supabase-api.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#E8E5DE;}
@@ -154,10 +151,6 @@ textarea{resize:none}
           </sc-for>
         </div>
       </section>
-      </sc-if>
-
-      <sc-if value="{{ hasSuppressed }}" hint-placeholder-val="{{ false }}">
-      <p style="font-size:12px;color:#666A80;line-height:1.5;margin:0;text-wrap:pretty;">{{ suppressedLabel }}</p>
       </sc-if>
 
       <section>
@@ -392,32 +385,18 @@ textarea{resize:none}
     </div>
     <div>
       <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:0 0 8px;color:#14224A;text-wrap:pretty;">Welcome to Principal Pulse</h1>
-      <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">Sign in with your school email and we’ll send you a link — no password to remember. Your weekly pulse is tied to your school; the network view only ever shows counts.</p>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">Choose your school to begin. Your weekly pulse is tied to your school; the network view only ever shows counts.</p>
     </div>
-
-    <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <label for="signin-email" style="font-size:13px;font-weight:600;color:#14224A;">School email address</label>
-      <input id="signin-email" type="email" autoComplete="email" placeholder="you@bloomacademy.tt" value="{{ email }}" onChange="{{ setEmail }}" style="display:block;width:100%;box-sizing:border-box;min-height:50px;padding:12px 14px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6" />
-      <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
-        <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;text-wrap:pretty;">{{ authErrorText }}</p>
-      </sc-if>
+    <div style="display:flex;flex-direction:column;gap:8px;" role="radiogroup" aria-label="Your school">
+      <sc-for list="{{ schoolOptions }}" as="sch" hint-placeholder-count="5">
+        <button type="button" role="radio" aria-checked="{{ sch.selected }}" onClick="{{ sch.select }}" style="display:flex;align-items:center;gap:12px;text-align:left;min-height:56px;padding:12px 14px;border-radius:14px;border:{{ sch.border }};background:{{ sch.bg }};color:#14224A;" style-hover="background:#F7F5FA" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+          <span style="width:36px;height:36px;border-radius:10px;background:#F0ECF6;color:#1E3A78;display:flex;align-items:center;justify-content:center;flex:none;font-family:'Source Serif 4',Georgia,serif;font-size:16px;font-weight:700;">{{ sch.initial }}</span>
+          <span style="flex:1;min-width:0;"><span style="display:block;font-size:15px;font-weight:600;line-height:1.3;">{{ sch.name }}</span><span style="display:block;font-size:12px;color:#666A80;margin-top:2px;">{{ sch.status }}</span></span>
+        </button>
+      </sc-for>
     </div>
-    </sc-if>
-
-    <sc-if value="{{ authSent }}" hint-placeholder-val="{{ false }}">
-    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;">
-      <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;line-height:1.2;color:#14224A;">Check your email</div>
-      <p style="margin:0;font-size:14px;line-height:1.5;color:#666A80;text-wrap:pretty;">We’ve sent a sign-in link to <strong style="color:#14224A;font-weight:600;">{{ email }}</strong>. Open it on this device to continue. The link expires in one hour.</p>
-      <button type="button" onClick="{{ useAnotherEmail }}" style="align-self:flex-start;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Use a different email</button>
-    </div>
-    </sc-if>
-
-    <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.lock }}<span><strong style="color:#14224A;font-weight:600;">Invited principals only.</strong> Sign-in works for the five Bloom school addresses and the central team. Your note stays with your school — it is never shown to colleagues or the central team.</span></div>
-
-    <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
-    <button type="button" onClick="{{ sendLink }}" disabled="{{ authDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ authBtnBg }};color:{{ authBtnFg }};font-size:15px;font-weight:600;margin-top:auto;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ authBtnLabel }}</button>
-    </sc-if>
+    <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.lock }}<span><strong style="color:#14224A;font-weight:600;">Demo sign-in.</strong> In the live app this step is replaced by a magic-link email to your school address.</span></div>
+    <button type="button" onClick="{{ confirmSchool }}" disabled="{{ schoolDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ schoolBtnBg }};color:{{ schoolBtnFg }};font-size:15px;font-weight:600;margin-top:auto;" style-focus="outline:3px solid #14224A;outline-offset:2px">Continue</button>
   </div>
   </sc-if>
 
@@ -515,9 +494,7 @@ textarea{resize:none}
           <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F0ECF6;">
             <span style="width:36px;height:36px;border-radius:10px;background:#FFFEF9;color:#1E3A78;display:flex;align-items:center;justify-content:center;flex:none;font-family:'Source Serif 4',Georgia,serif;font-size:16px;font-weight:700;">{{ schoolInitial }}</span>
             <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:600;">{{ schoolName }}</span><span style="display:block;font-size:12px;color:#666A80;margin-top:2px;">Signed in as principal</span></span>
-            <sc-if value="{{ canSwitchSchool }}" hint-placeholder-val="{{ false }}">
             <button type="button" onClick="{{ switchSchool }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Switch</button>
-            </sc-if>
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><div style="font-size:14px;font-weight:600;">This week across the network</div><div style="font-size:12px;color:#666A80;">{{ weekLabel }}</div></div>
@@ -549,7 +526,7 @@ textarea{resize:none}
           </div>
           <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
             <button type="button" onClick="{{ resetDemo }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:14px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ resetLabel }}</button>
-            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Ends your session on this device. Your pulses, requests, points and shared resources stay on your school’s account.</p>
+            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Clears submissions, requests, points, shared resources and the signed-in school on this device.</p>
           </div>
         </div>
       </sc-if>
@@ -632,7 +609,7 @@ textarea{resize:none}
 </x-import>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;urgentRouteConfigured&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Organisation&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Hot week&quot;,&quot;Quiet week&quot;],&quot;default&quot;:&quot;Hot week&quot;,&quot;tsType&quot;:&quot;'Hot week' | 'Quiet week'&quot;,&quot;section&quot;:&quot;Demo data&quot;},&quot;perksMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Term 2 preview&quot;,&quot;Live&quot;],&quot;default&quot;:&quot;Term 2 preview&quot;,&quot;tsType&quot;:&quot;'Term 2 preview' | 'Live'&quot;,&quot;section&quot;:&quot;Perks&quot;},&quot;urgentRouteConfigured&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Organisation&quot;}}">
 const INK='#14224A', GREEN='#1E3A78', MINT='#F0ECF6', BORDER='#D8D2E4', PAPER='#FFFEF9', MUTED='#666A80', WARM='#F8F3E8';
 
 const TOPICS = [
@@ -670,6 +647,19 @@ const MICRO = {
   data:{title:'Use data to choose, not just describe',body:'A useful data conversation ends with a decision. Focus on the few measures that actually change the next action.',tryIt:'Add: So what decision will we make differently because of this?',prompt:'Which measure actually changes our next action?',evidence:'Data use improves outcomes only when it changes instructional decisions; schools that end data meetings with a named action outperform those that only review results.',source:'Schildkamp (2019), Educational Research; Hamilton et al. (2009), IES practice guide on using student achievement data.',local:'Use termly assessments alongside SEA, CSEC and CAPE results to decide next steps, not only to complete the reporting cycle.'},
   other:{title:'Turn a broad concern into the next useful question',body:'Define what is happening, who it affects and what decision or support would move it forward.',tryIt:'I’m noticing ___; it matters because ___; the next thing I need is ___.',prompt:'What would make this concern more actionable by the end of the week?',evidence:'Improvement science starts with a precise problem definition; teams that spend time defining the problem choose better interventions and abandon fewer.',source:'Bryk, Gomez, Grunow & LeMahieu (2015), Learning to Improve.',local:'If the concern involves another agency, note which one — SSSD, the Children’s Authority, a school board or the Ministry district office — so support can be routed.'},
 };
+const SCHOOLS = [
+  {id:'pos', name:'Bloom Academy, Port of Spain'},
+  {id:'sfo', name:'Bloom Academy, San Fernando'},
+  {id:'ari', name:'Bloom Academy, Arima'},
+  {id:'cha', name:'Bloom Academy, Chaguanas'},
+  {id:'tob', name:'Bloom Academy, Scarborough'},
+];
+const PERKS = [
+  {id:'starbucks', partner:'Starbucks Trinidad & Tobago', mark:'S', offer:'Staffroom Friday', detail:'20% off handcrafted drinks for your whole staff on one Friday of your choice.', cost:30, terms:'Valid at participating Starbucks stores in Trinidad and Tobago. Show the code with school ID at the counter. One redemption per school per term; not combinable with other offers.'},
+  {id:'rik', partner:'R.I.K. Services', mark:'R', offer:'Classroom books & stationery', detail:'10% off books, stationery and classroom supplies at any RIK branch.', cost:20, terms:'Valid at RIK branches nationwide for school purchases. Show the code at checkout. Excludes textbooks under the Ministry rental programme.'},
+  {id:'tecu', partner:'TECU Credit Union', mark:'T', offer:'Staff financial-wellness session', detail:'A free 45-minute on-site session on budgeting, saving and education loans for your staff.', cost:40, terms:'Booked directly with TECU using the code. Subject to availability; membership information provided but not required to attend.'},
+];
+const DEMO_BASE_POINTS = 30; // three prior weekly pulses in the seeded history
 const AI_SYSTEM = `You are an experienced school-leadership coach working with principals in Trinidad and Tobago. You know the system well: the Ministry of Education and its district offices, the SEA, CSEC and CAPE cycles, the Teaching Service Commission, the Student Support Services Division (SSSD), the Children’s Authority, denominational school boards under the Concordat, PTAs, and the day-to-day realities of primary and secondary schools.
 
 Your job: adapt a 60-second leadership idea so it fits THIS principal’s situation, using their note as the anchor.
@@ -702,8 +692,16 @@ const MORE = {
   other:{resource:{title:'Make it actionable',lines:['I’m noticing ___','It matters because ___','The next thing I need is ___']},checklist:['Write what is happening in one sentence','Name who it affects most','Identify the decision or support that would move it','Decide who else needs to know','Set a date to revisit it'],idea:{title:'Talk to one person',body:'Choose the colleague most affected and ask what they think the next useful step is. Broad concerns narrow quickly in conversation.'},peer:'Concerns filed under “something else” reach the central team as themes only. Ask them whether others have raised something similar.'},
 };
 
-// Demo seeds (PAST / CURRENT) were removed with the localStorage layer: Step 2 is now fed
-// entirely by the network_pulse() RPC, and schools/perks are read from the database.
+// Seeded demo data: 5 schools, index 0 = the signed-in principal. Oldest week first.
+const PAST = [
+  ['attendance','attendance','attendance','workload','send'],
+  ['workload','workload','attendance','attendance','staffing'],
+  ['workload','workload','behaviour','behaviour','attendance'],
+];
+const CURRENT = {
+  hot: ['workload','workload','workload','staffing','behaviour'],
+  quiet: ['workload','workload','staffing','behaviour','attendance'],
+};
 
 const ACTIONS = [
   {id:'resource', title:'I need a resource', sub:'Get a ready-to-use template or prompt', icon:'M6 3h9l5 5v13H6zM15 3v5h5M9 13h6M9 17h6'},
@@ -741,37 +739,13 @@ function icon(key, { size = 20, color = '#1E3A78', sw = 1.75, fallback = '' } = 
 const SUPPORT_TYPES = [{id:'advice',label:'Advice'},{id:'conversation',label:'Conversation'},{id:'practical_help',label:'Practical help'},{id:'urgent',label:'Urgent'}];
 const SEL = `2px solid ${GREEN}`, UNSEL = `1.5px solid ${BORDER}`;
 
-// ---- shape helpers for the Supabase payloads --------------------------------
-// network_pulse() returns counts only, with every cell below the minimum of 2 already
-// removed server-side. These turn that payload back into the {topic: count} maps the
-// hot / rising / persistent maths below already expects.
-function countMap(rows) { const m = {}; (rows || []).forEach(r => { m[r.topic] = r.count; }); return m; }
-function seriesMap(rows, i) { const m = {}; (rows || []).forEach(r => { const v = (r.counts || [])[i] || 0; if (v) m[r.topic] = v; }); return m; }
-function mapShared(r) { return { id:r.id, key:`${r.topic}|${r.title}`, topic:r.topic, title:r.title, tryIt:r.try_it, text:r.text, atISO:r.created_at }; }
-function mapRequest(r) { return { id:r.id, ref:r.ref, schoolId:r.school_id, type:r.type, topic:r.topic, impact:r.impact, context:r.context, help:r.help, status:r.status, atISO:r.created_at }; }
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
 class Component extends DCLogic {
   sheetRef = React.createRef();
-  state = { showMore:false, screen:1, topic:null, impact:null, note:'', saved:false, skipped:false, justSaved:false, sheet:null, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, cRef:'', copied:false, ai:{ key:null, status:'idle', data:null, error:'' }, redeemed:{}, perkId:null,
-    // Session + server state. `schoolId` now comes from profiles.school_id, not localStorage.
-    authStatus:'loading', email:'', authError:'', session:null, profile:null, schoolId:null,
-    schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
-    submitting:false, submitError:'', cSending:false };
+  state = { showMore:false, screen:1, topic:null, impact:null, note:'', saved:false, skipped:false, justSaved:false, sheet:null, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, cRef:'', copied:false, ai:{ key:null, status:'idle', data:null, error:'' }, redeemed:{}, perkId:null, schoolId: (() => { try { return localStorage.getItem('bloom-pulse-school') || null; } catch (e) { return null; } })(), pendingSchool:null, submissions:{}, requests:[] };
 
-  // bloom-pulse-shared -> shared_resources (per school, RLS-scoped).
-  async addShared(item) {
-    const s = this.state; if (!s.schoolId || !s.session) return;
-    this.setState({ shared: [{ ...item, id:null }, ...(s.shared || [])].slice(0, 20) });   // optimistic
-    try { await BloomAPI.addShared({ schoolId:s.schoolId, userId:s.session.user.id, topic:item.topic, title:item.title, tryIt:item.tryIt, text:item.text }); } catch (e) {}
-    this.refreshShared();
-  }
-  async removeShared(id) {
-    if (!id) return this.refreshShared();   // still mid-insert; let the server decide
-    this.setState({ shared: (this.state.shared || []).filter(x => x.id !== id) });
-    try { await BloomAPI.removeShared(id); } catch (e) {}
-    this.refreshShared();
-  }
+  loadRewards() { try { return JSON.parse(localStorage.getItem('bloom-pulse-rewards') || '{}') || {}; } catch (e) { return {}; } }
+  loadShared() { try { const v = JSON.parse(localStorage.getItem('bloom-pulse-shared') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  saveShared(list) { this.setState({ shared:list }, () => { try { localStorage.setItem('bloom-pulse-shared', JSON.stringify(list)); } catch (e) {} }); }
   async shareNative(text, title) {
     if (navigator.share) { try { await navigator.share({ title, text }); this.setState({ shareStatus:'shared' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text); this.setState({ shareStatus:'copied' }); } catch (e) { this.setState({ shareStatus:'copied' }); }
@@ -780,8 +754,7 @@ class Component extends DCLogic {
   esc(v) { return String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
   printHot(d) {
     const e = this.esc.bind(this);
-    const N = d.schoolsTotal || 5;
-    const row = (label, n, sub) => `<tr><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;font-size:12pt;">${e(label)}<div style="font-size:9.5pt;color:#666A80;margin-top:2px;">${e(sub)}</div></td><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;width:46%;"><div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:9px;background:#F0ECF6;border-radius:5px;overflow:hidden;"><div style="width:${n/N*100}%;height:100%;background:#1E3A78;"></div></div><span style="font-size:12pt;font-weight:600;min-width:34px;text-align:right;">${n}/${N}</span></div></td></tr>`;
+    const row = (label, n, sub) => `<tr><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;font-size:12pt;">${e(label)}<div style="font-size:9.5pt;color:#666A80;margin-top:2px;">${e(sub)}</div></td><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;width:46%;"><div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:9px;background:#F0ECF6;border-radius:5px;overflow:hidden;"><div style="width:${n/5*100}%;height:100%;background:#1E3A78;"></div></div><span style="font-size:12pt;font-weight:600;min-width:34px;text-align:right;">${n}/5</span></div></td></tr>`;
     const trendRows = d.trends.map(t => `<tr><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;">${e(t.label)}</td><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;color:#454A68;text-align:center;">${e(t.countsLabel)}</td><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;text-align:right;">${e(t.tag)} ${e(t.arrow)}</td></tr>`).join('');
     const chips = (items, fmt) => items.length ? items.map(fmt).map(x => `<span style="display:inline-block;padding:5px 11px;border:1px solid #D8D2E4;border-radius:999px;font-size:10.5pt;margin:0 6px 6px 0;">${x}</span>`).join('') : '<span style="font-size:10.5pt;color:#666A80;">None this week</span>';
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bloom network pulse — ${e(d.weekLabel)}</title><style>@page{size:letter;margin:18mm}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#14224A;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1,h2{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500}table{width:100%;border-collapse:collapse}</style></head><body>
@@ -789,127 +762,65 @@ class Component extends DCLogic {
 <h2 style="font-size:15pt;margin:22px 0 4px;">${e(d.hotHeading)}</h2><table>${d.hotItems.map(h => row(h.label, h.count, h.trendLine)).join('')}</table>
 <div style="display:flex;gap:28px;margin-top:20px;"><div style="flex:1;"><h2 style="font-size:13pt;margin:0 0 8px;">Rising</h2>${chips(d.risingItems, r => `↑ ${e(r.label)} <span style="color:#666A80;">${e(r.delta)}</span>`)}</div><div style="flex:1;"><h2 style="font-size:13pt;margin:0 0 8px;">On the radar</h2>${chips(d.radarItems, p => `${e(p.label)} <span style="color:#666A80;">${e(p.countLabel)}</span>`)}</div></div>
 <h2 style="font-size:15pt;margin:24px 0 4px;">Last 4 weeks</h2><table><tr><th style="text-align:left;font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Theme</th><th style="font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Schools per week (oldest → this week)</th><th style="text-align:right;font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Status</th></tr>${trendRows}</table>
-<p style="font-size:9.5pt;color:#666A80;line-height:1.5;margin:14px 0 0;">${d.suppressed ? `${d.suppressed} further theme${d.suppressed === 1 ? '' : 's'} not shown to protect privacy. ` : ''}Hot = 3+ of ${N} schools this week · Rising = more selections than last week · Persistent = appears in 3+ of the last 4 weeks.</p>
-<div style="margin-top:26px;padding:12px 14px;background:#F0ECF6;border-radius:8px;font-size:10pt;line-height:1.5;"><strong>Aggregated across ${N} Bloom schools.</strong> Individual responses, school names and principals’ notes are not included. Prepared from Bloom Principal Pulse on ${e(d.today)}. CEBM central team: +1 868-607-2326.</div>
+<p style="font-size:9.5pt;color:#666A80;line-height:1.5;margin:14px 0 0;">Hot = 3+ of 5 schools this week · Rising = more selections than last week · Persistent = appears in 3+ of the last 4 weeks.</p>
+<div style="margin-top:26px;padding:12px 14px;background:#F0ECF6;border-radius:8px;font-size:10pt;line-height:1.5;"><strong>Aggregated across five Bloom schools.</strong> Individual responses, school names and principals’ notes are not included. Prepared from Bloom Principal Pulse on ${e(d.today)}. CEBM central team: +1 868-607-2326.</div>
 <script>window.addEventListener('load',function(){setTimeout(function(){window.print();},250);});<\/script></body></html>`;
     const w = window.open('', '_blank');
     if (!w) { try { navigator.clipboard.writeText(html); } catch (e) {} this.setState({ pdfBlocked:true }); setTimeout(() => this.setState({ pdfBlocked:false }), 3000); return; }
     w.document.open(); w.document.write(html); w.document.close();
   }
-  // window.claude.complete -> POST /functions/v1/tailor. The edge function holds the API key,
-  // enforces the 6-a-day limit, blocks safeguarding and re-runs the same output validation
-  // server-side, so the client only has to render the verdict it returns.
   async refine(key, topic, impact, note, base, more) {
     this.setState({ ai:{ key, status:'busy', data:null, error:'' } });
-    const fail = (error) => { if (this.state.ai.key === key) this.setState({ ai:{ key, status:'error', data:null, error } }); };
-    try {
-      const r = await BloomAPI.tailor({
-        topic: topic.id, impact: impact ? impact.id : null, note, week_start: this.weekISO(),
-        base: { label:topic.label, title:base.title, body:base.body, tryIt:base.tryIt, prompt:base.prompt, evidence:base.evidence, source:base.source, local:base.local },
-        more: { checklist:more.checklist, idea:more.idea },
-      });
-      if (this.state.ai.key !== key) return;
-      if (r && r.status === 'done' && r.data) { this.setState({ ai:{ key, status:'done', data:r.data, error:'' } }); return; }
-      if (r && r.status === 'declined') { fail(`Not enough to tailor safely: ${String(r.reason || 'add a sentence of context on step 1 and try again').replace(/[.!]+$/, '')}. The default idea still applies.`); return; }
-      if (r && r.status === 'rejected') { fail('The tailored version added claims that aren’t in the evidence, so it was discarded. The default idea still applies.'); return; }
-      fail('Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
-    } catch (e) {
-      fail(e && e.status === 429 ? 'You’ve used today’s tailoring allowance for this school. The evidence-based default is shown instead.'
-        : e && (e.message === 'offline' || e.message === 'unauthenticated') ? 'AI tailoring needs an online connection. The evidence-based default is shown instead.'
-        : 'Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
+    if (!window.claude || !window.claude.complete) { this.setState({ ai:{ key, status:'error', data:null, error:'AI tailoring needs an online connection. The evidence-based default is shown instead.' } }); return; }
+    const user = `PRINCIPAL’S WEEKLY PULSE\nTheme: ${topic.label}\nHow much it is affecting them: ${impact ? impact.label : 'not shared'}\nPrincipal’s note (verbatim): ${note ? '"' + note + '"' : '(none given)'}\n\nGROUNDING MATERIAL — the only evidence you may draw on:\nEvidence: ${base.evidence}\nSource: ${base.source}\nTrinidad & Tobago context: ${base.local}\nRelated checklist: ${more.checklist.join('; ')}\nRelated idea: ${more.idea.title} — ${more.idea.body}\n\nDEFAULT IDEA TO ADAPT\nTitle: ${base.title}\nBody: ${base.body}\nTry this today: ${base.tryIt}\nPrompt: ${base.prompt}`;
+    const okStat = (s) => !/\d+(\.\d+)?\s?%|effect size|\bstud(y|ies)\b|research shows|according to/i.test(s) || /\d+(\.\d+)?\s?%/.test(base.evidence);
+    const clean = (v, max) => String(v || '').trim().replace(/^[“"]|[”"]$/g,'').split(/\s+/).slice(0, max).join(' ');
+    let lastErr = '';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const req = { system: AI_SYSTEM, messages:[{ role:'user', content:user }], max_tokens: 500 };
+        if (attempt === 0) req.model = 'claude-sonnet-4-5';
+        const text = await window.claude.complete(req);
+        const m = String(text).match(/\{[\s\S]*\}/);
+        const d = JSON.parse(m ? m[0] : text);
+        if (this.state.ai.key !== key) return;
+        if (d && d.tailored === false) { this.setState({ ai:{ key, status:'error', data:null, error: `Not enough to tailor safely: ${(clean(d.reason, 30) || 'add a sentence of context on step 1 and try again').replace(/[.!]+$/, '')}. The default idea still applies.` } }); return; }
+        if (!(d && d.title && d.body && d.tryIt && d.prompt && d.grounding)) { lastErr = 'shape'; continue; }
+        const joined = [d.title, d.body, d.tryIt, d.prompt].join(' ');
+        if (/https?:|www\.|\b\d{3}[- ]\d{4}\b/i.test(joined) || !okStat(joined)) { lastErr = 'ungrounded'; continue; }
+        this.setState({ ai:{ key, status:'done', data:{ title:clean(d.title, 8), body:clean(d.body, 50), tryIt:clean(d.tryIt, 40), prompt:clean(d.prompt, 22), grounding:clean(d.grounding, 28) }, error:'' } });
+        return;
+      } catch (e) { lastErr = 'call'; }
     }
+    if (this.state.ai.key === key) this.setState({ ai:{ key, status:'error', data:null, error: lastErr === 'ungrounded' ? 'The tailored version added claims that aren’t in the evidence, so it was discarded. The default idea still applies.' : 'Couldn’t tailor this just now. Try again in a moment — the default idea still applies.' } });
   }
 
   componentDidMount() {
     this.mq = window.matchMedia('(max-width: 520px)');
     this.onMq = () => this.setState({ narrow: this.mq.matches });
     this.mq.addEventListener ? this.mq.addEventListener('change', this.onMq) : this.mq.addListener(this.onMq);
-    this.setState({ narrow: this.mq.matches });
+    this.setState({ narrow: this.mq.matches, redeemed: this.loadRewards(), shared: this.loadShared() });
     this.onKey = (e) => { if (e.key === 'Escape' && this.state.sheet) this.setState({ sheet: null }); };
     window.addEventListener('keydown', this.onKey);
     // Re-render once the icon library is available.
     if (!window.lucide) { let n = 0; this.iconPoll = setInterval(() => { if (window.lucide || ++n > 100) { clearInterval(this.iconPoll); this.forceUpdate(); } }, 100); }
-    // Session bootstrap. profiles.school_id replaces the bloom-pulse-school picker.
-    // The data layer is a <helmet> script, which in the bundled build can still be
-    // executing when this mounts, so wait for it rather than declaring it missing.
-    this.whenApiReady(ok => {
-      if (!ok) { this.setState({ authStatus:'signed_out', authError:'This build has no Supabase configuration.' }); return; }
-      BloomAPI.onAuthChange(session => this.onSession(session));
-      BloomAPI.getSession().then(session => this.onSession(session)).catch(() => this.setState({ authStatus:'signed_out' }));
-    });
-  }
-
-  whenApiReady(cb) {
-    const ready = () => !!(window.BloomAPI && BloomAPI.configured());
-    if (ready()) return cb(true);
-    let n = 0;
-    this.apiPoll = setInterval(() => {
-      if (ready() || ++n > 100) { clearInterval(this.apiPoll); cb(ready()); }
-    }, 50);
-  }
-
-  // Runs on first load and on every auth state change (including the magic-link return).
-  async onSession(session) {
-    if (!session) { this.setState({ session:null, profile:null, schoolId:null, authStatus: this.state.authStatus === 'sent' ? 'sent' : 'signed_out' }); return; }
-    let profile = null;
-    try { profile = await BloomAPI.loadProfile(); } catch (e) { profile = null; }
-    // Allow-list: a session with no profiles row is not a pilot user, so drop it.
-    if (!profile) {
-      await BloomAPI.signOut();
-      this.setState({ session:null, profile:null, schoolId:null, authStatus:'signed_out', authError:'That address is not on the Bloom pilot list. Ask the central team to add you.' });
-      return;
-    }
-    this.setState({ session, profile, schoolId: profile.school_id || null, authStatus:'signed_in', authError:'' }, () => this.loadForSchool(profile.school_id));
-  }
-
-  // Everything steps 2-4 need, read from the server for the signed-in school.
-  // A central-team profile has no school_id: it gets the network view and the support
-  // inbox, but no pulse of its own to load.
-  async loadForSchool(schoolId) {
-    const week = this.weekISO();
     try {
-      const [schools, perkRows] = await Promise.all([BloomAPI.listSchools(), BloomAPI.listPerks()]);
-      this.setState({ schools, perkRows });
+      const schoolId = localStorage.getItem('bloom-pulse-school') || null;
+      this.setState({ schoolId, pendingSchool: schoolId, submissions: this.loadSubs(), requests: this.loadReqs() }, () => this.loadForSchool(schoolId));
     } catch (e) {}
-    this.refreshNetwork(); this.refreshRequests();
+  }
+  loadSubs() { try { return JSON.parse(localStorage.getItem('bloom-pulse-submissions') || '{}') || {}; } catch (e) { return {}; } }
+  loadReqs() { try { const v = JSON.parse(localStorage.getItem('bloom-pulse-requests') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  loadForSchool(schoolId) {
     if (!schoolId) return;
+    const week = this.weekISO();
+    const sub = ((this.state.submissions || {})[week] || {})[schoolId];
+    if (sub) { this.setState({ topic:sub.topic, impact:sub.impact, note:sub.note || '', saved:true, skipped:false, screen: this.state.screen === 1 ? 2 : this.state.screen }); return; }
     try {
-      const mine = await BloomAPI.myPulse(week);
-      if (mine) {
-        this.setState({ topic:mine.topic, impact:mine.impact, note:mine.note || '', saved:true, skipped:false, screen: this.state.screen === 1 ? 2 : this.state.screen });
-      } else {
-        // No pulse yet this week: fall back to the device-local draft (drafts stay local by design).
-        const d = JSON.parse(localStorage.getItem('bloom-pulse-draft:' + schoolId) || 'null');
-        if (d && d.weekStartISO === week) this.setState({ topic:d.topic || null, impact:d.impact || null, note:d.note || '' });
-      }
-    } catch (e) {}
-    this.refreshRewards(); this.refreshShared();
-  }
-
-  // bloom-pulse-submissions -> network_pulse(). Other schools' rows never reach the client.
-  async refreshNetwork() { try { this.setState({ net: await BloomAPI.networkPulse(this.weekISO()) }); } catch (e) {} }
-
-  // bloom-pulse-rewards -> points_ledger sum + redemptions. The client never does its own maths.
-  async refreshRewards() {
-    try {
-      const [ledger, reds, history] = await Promise.all([BloomAPI.listLedger(), BloomAPI.listRedemptions(), BloomAPI.myPulseHistory(this.weeksAgoISO(12))]);
-      const redeemed = {};
-      reds.forEach(r => { redeemed[r.perk_id] = { code:r.code, atISO:r.issued_at, expiresAt:r.expires_at, usedAt:r.used_at }; });
-      this.setState({ ledger, redeemed, points: Math.max(0, ledger.reduce((a, r) => a + r.delta, 0)), streak: this.streakFrom(history) });
+      const d = JSON.parse(localStorage.getItem('bloom-pulse-draft:' + schoolId) || 'null');
+      if (d && d.weekStartISO === week) this.setState({ topic:d.topic || null, impact:d.impact || null, note:d.note || '' });
     } catch (e) {}
   }
-  async refreshShared() { try { this.setState({ shared: (await BloomAPI.listShared()).map(mapShared) }); } catch (e) {} }
-  async refreshRequests() { try { this.setState({ requests: (await BloomAPI.listRequests()).map(mapRequest) }); } catch (e) {} }
-
-  // Consecutive weeks of pulses ending this week, or last week when this one is not in yet.
-  streakFrom(rows) {
-    const have = new Set((rows || []).map(r => r.week_start));
-    const d = this.weekStart(); let n = 0;
-    if (!have.has(this.weekISO())) d.setDate(d.getDate() - 7);
-    while (have.has(d.toISOString().slice(0,10))) { n++; d.setDate(d.getDate() - 7); }
-    return n;
-  }
-  weeksAgoISO(n) { const d = this.weekStart(); d.setDate(d.getDate() - n * 7); return d.toISOString().slice(0,10); }
   componentDidUpdate() {
     const prev = { sheet: this._lastSheet }; this._lastSheet = this.state.sheet;
     if (this.state.sheet && this.state.sheet !== prev.sheet) {
@@ -917,29 +828,28 @@ class Component extends DCLogic {
       requestAnimationFrame(() => { const el = this.sheetRef.current; if (!el) return; const first = el.querySelector('h2') || el; first.setAttribute && first.setAttribute('tabindex','-1'); first.focus(); });
     } else if (!this.state.sheet && prev.sheet && this.lastFocus && this.lastFocus.focus) { this.lastFocus.focus(); }
   }
-  componentWillUnmount() { if (this.mq) (this.mq.removeEventListener ? this.mq.removeEventListener('change', this.onMq) : this.mq.removeListener(this.onMq)); clearInterval(this.iconPoll); clearInterval(this.apiPoll); window.removeEventListener('keydown', this.onKey); }
+  componentWillUnmount() { if (this.mq) (this.mq.removeEventListener ? this.mq.removeEventListener('change', this.onMq) : this.mq.removeListener(this.onMq)); clearInterval(this.iconPoll); window.removeEventListener('keydown', this.onKey); }
   weekStart() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
   weekISO() { return this.weekStart().toISOString().slice(0,10); }
   persist(patch) {
     this.setState(patch, () => { try { localStorage.setItem('bloom-pulse-draft:' + (this.state.schoolId || 'none'), JSON.stringify({ weekStartISO:this.weekISO(), topic:this.state.topic, impact:this.state.impact, note:this.state.note })); } catch (e) {} });
   }
+  counts(week) { const c = {}; week.forEach(t => { if (t) c[t] = (c[t]||0)+1; }); return c; }
 
   renderVals() {
     const s = this.state, p = this.props;
-    const emailOk = EMAIL_RE.test((s.email || '').trim());
-    const authBusy = s.authStatus === 'loading' || s.authStatus === 'sending';
+    const quiet = (p.scenario ?? 'Hot week') === 'Quiet week';
     const routeConfigured = p.urgentRouteConfigured ?? true;
+    const seed = CURRENT[quiet ? 'quiet' : 'hot'].slice();
     const week = this.weekISO();
-    // Step 2 is fed entirely by network_pulse(): server-side counts with the minimum-cell
-    // rule already applied. A theme only one school picked arrives as a count, never by name.
-    const net = s.net || {};
-    const nSchools = net.schools_total || (s.schools || []).length || 5;
-    const cur = countMap(net.current), prev = countMap(net.previous);
-    const C = [0,1,2,3].map(i => seriesMap(net.four_weeks, i));
-    // The principal's own theme is always known to them, even when suppressed for everyone else.
-    if (s.saved && s.topic) { cur[s.topic] = Math.max(cur[s.topic] || 0, 1); C[3][s.topic] = Math.max(C[3][s.topic] || 0, 1); }
-    const included = net.included || 0;
-    const suppressed = net.suppressed || 0;
+    const weekSubs = (s.submissions || {})[week] || {};
+    const schoolIdx = Math.max(0, SCHOOLS.findIndex(x => x.id === s.schoolId));
+    SCHOOLS.forEach((sch, i) => { if (weekSubs[sch.id]) seed[i] = weekSubs[sch.id].topic; });
+    if (s.saved) seed[schoolIdx] = s.topic; else if (s.skipped) seed[schoolIdx] = null;
+    const weeks = [...PAST, seed];
+    const C = weeks.map(w => this.counts(w));
+    const cur = C[3], prev = C[2];
+    const included = seed.filter(Boolean).length;
 
     const byCount = Object.keys(cur).sort((a,b) => cur[b]-cur[a] || TOPICS.findIndex(t=>t.id===a)-TOPICS.findIndex(t=>t.id===b));
     let hotIds = byCount.filter(id => cur[id] >= 3);
@@ -948,13 +858,13 @@ class Component extends DCLogic {
     const hotItems = hotIds.map(id => {
       const n = cur[id], pv = prev[id]||0;
       const rising = n > pv;
-      return { label:T[id].label, count:n, countLabel:`${n}/${nSchools}`, pct:`${n/nSchools*100}%`,
+      return { label:T[id].label, count:n, countLabel:`${n}/5`, pct:`${n/5*100}%`,
         trendLine: rising ? `↑ Rising · ${pv} last week` : n < pv ? `↓ Down from ${pv} last week` : `→ Same as last week`,
         trendColor: rising ? GREEN : MUTED };
     });
     const risingItems = byCount.filter(id => !hotIds.includes(id) && cur[id] > (prev[id]||0)).map(id => ({ label:T[id].label, delta:`${prev[id]||0} → ${cur[id]}` }));
     const risingIds = risingItems.map(r => TOPICS.find(t=>t.label===r.label).id);
-    const radarItems = byCount.filter(id => !hotIds.includes(id) && !risingIds.includes(id)).map(id => ({ label:T[id].label, countLabel:`${cur[id]}/${nSchools}` }));
+    const radarItems = byCount.filter(id => !hotIds.includes(id) && !risingIds.includes(id)).map(id => ({ label:T[id].label, countLabel:`${cur[id]}/5` }));
 
     const trends = TOPICS.map(t => {
       const cs = C.map(c => c[t.id]||0), total = cs.reduce((a,b)=>a+b,0);
@@ -963,7 +873,7 @@ class Component extends DCLogic {
       const tag = present >= 3 ? 'Persistent' : n > pv ? 'Rising' : 'Tracking';
       const arrow = n > pv ? '↑' : n < pv ? '↓' : '→';
       return { id:t.id, label:t.label, total, n, tag, arrow, arrowColor: n > pv ? GREEN : MUTED,
-        countsLabel: cs.join(' · '), aria:`${t.label}: ${cs.join(', ')} of ${nSchools} over the last four weeks, ${tag}`,
+        countsLabel: cs.join(' · '), aria:`${t.label}: ${cs.join(', ')} of 5 over the last four weeks, ${tag}`,
         bars: cs.map((v,i) => ({ h:`${4 + v*6}px`, bg: v ? (i===3 ? GREEN : '#B5A3D2') : BORDER })) };
     }).filter(Boolean).sort((a,b) => b.n-a.n || b.total-a.total).slice(0,6).map((t,i) => ({ ...t, divider: i ? `1px solid #E6E2EB` : 'none' }));
 
@@ -978,21 +888,17 @@ class Component extends DCLogic {
     const micro = aiDone ? { ...baseMicro, ...s.ai.data } : baseMicro;
     const same = cur[effTopic] || 0;
     const s3 = { iconEl: icon(effTopic, { fallback: topic.icon }), label:topic.label, labelLower: effTopic==='send' ? topic.label : topic.label.toLowerCase(),
-      impactLabel: impact ? impact.label : 'Not shared', sameLabel: `${same} of ${nSchools} schools chose this theme` };
+      impactLabel: impact ? impact.label : 'Not shared', sameLabel: `${same} of 5 schools chose this theme` };
 
     const note = s.note.trim();
     const talkMessage = `Hi — I’d like to talk through ${s3.labelLower} this week. It is affecting me ${impact ? impact.phrase : 'enough to want a conversation'}. ${note ? note + ' ' : ''}Could we find a short time to think through the next best step?`;
 
     const sheetId = s.sheet;
-    const sheet = { eyebrow:'', title:'', isResource:sheetId==='resource', isTool:sheetId==='tool', isIdea:sheetId==='idea', isPeer:sheetId==='peer', isTalk:sheetId==='talk', isCentral:sheetId==='central', isPerk:sheetId==='perk', isShare:sheetId==='share', isDemo:sheetId==='demo', lines:more.resource.lines, body:'', peerCount:`${same} of ${nSchools} principals` };
+    const sheet = { eyebrow:'', title:'', isResource:sheetId==='resource', isTool:sheetId==='tool', isIdea:sheetId==='idea', isPeer:sheetId==='peer', isTalk:sheetId==='talk', isCentral:sheetId==='central', isPerk:sheetId==='perk', isShare:sheetId==='share', isDemo:sheetId==='demo', lines:more.resource.lines, body:'', peerCount:`${same} of 5 principals` };
     if (sheet.isResource) { sheet.eyebrow='Resource'; sheet.title=more.resource.title; }
     if (sheet.isShare) { sheet.eyebrow='Share with colleagues'; sheet.title=micro.title; }
     if (sheet.isDemo) { sheet.eyebrow='Account'; sheet.title='Your school and this demo'; }
-    const role = (s.profile || {}).role || 'principal';
-    const isCentral = role === 'central' || role === 'admin';
-    const school = (s.schools || []).find(x => x.id === s.schoolId)
-      || (isCentral ? { id:null, name:'CEBM central team', short_name:'Central team' }
-                    : { id:null, name:'Bloom Academy', short_name:'Bloom' });
+    const school = SCHOOLS.find(x => x.id === s.schoolId) || SCHOOLS[0];
     const shared = s.shared || [];
     const shareText = `${micro.title}\n\n${micro.body}\n\nTry this today: ${micro.tryIt}\n\nPrompt: “${micro.prompt}”\n\nWhy it works: ${micro.evidence} (${micro.source})\n\n— Shared from Bloom Principal Pulse · ${topic.label}`;
     const shareKey = `${effTopic}|${micro.title}`;
@@ -1003,27 +909,26 @@ class Component extends DCLogic {
     if (sheet.isTalk) { sheet.eyebrow='Talk it through'; sheet.title='Your conversation request'; }
     if (sheet.isCentral) { sheet.eyebrow='Central team'; sheet.title = s.cSent ? 'Request sent' : 'Ask for central-team support'; }
 
-    // Rewards — points are the server's sum(delta) over points_ledger; never local maths.
-    const fullNetwork = nSchools > 0 && included === nSchools;
-    const points = s.points;
-    const streak = s.streak;
-    const LEDGER_LABEL = { pulse:'this week’s pulse', note:'note shared', full_network:'full network' };
-    const earnedLines = (s.ledger || []).filter(r => r.week_start === week && r.delta > 0).map(r => `+${r.delta} ${LEDGER_LABEL[r.kind] || 'bonus'}`);
+    // Rewards
+    const fullNetwork = included === 5;
+    const earned = DEMO_BASE_POINTS + (s.saved ? 10 : 0) + (s.saved && noteTrim ? 5 : 0) + (s.saved && fullNetwork ? 10 : 0);
+    const spent = Object.values(s.redeemed).reduce((a, r) => a + (r.cost || 0), 0);
+    const points = Math.max(0, earned - spent);
+    const streak = s.saved ? 4 : 3;
+    const earnedLines = s.saved ? ['+10 this week’s pulse', ...(noteTrim ? ['+5 note shared'] : []), ...(fullNetwork ? ['+10 full network'] : [])] : [];
     const badges = [
-      { key:'star', label:'First pulse', sub: streak > 0 ? 'Shared a weekly pulse' : 'Share your first weekly pulse', earned: streak > 0 },
-      { key:'flame', label:'4-week streak', sub: streak >= 4 ? 'Four Mondays running' : `${streak} of 4 Mondays so far`, earned: streak >= 4 },
-      { key:'users', label:'Full network', sub: fullNetwork ? 'All schools in' : `${included} of ${nSchools} in this week`, earned: s.saved && fullNetwork },
+      { key:'star', label:'First pulse', sub:'Shared a weekly pulse', earned:true },
+      { key:'flame', label:'4-week streak', sub: s.saved ? 'Four Mondays running' : 'Submit this week to earn', earned:s.saved },
+      { key:'users', label:'Full network', sub: fullNetwork ? 'All five schools in' : `${included} of 5 in this week`, earned: s.saved && fullNetwork },
       { key:'pen', label:'Note shared', sub: s.saved && noteTrim ? 'Context helps the team' : 'Add a note to your pulse', earned: s.saved && !!noteTrim },
     ].map(b => ({ ...b, aria:`${b.label}: ${b.earned ? 'earned' : 'not yet earned'}`, bg: b.earned ? PAPER : '#F6F5F0', opacity: b.earned ? 1 : .7, iconBg: b.earned ? '#F8F3E8' : MINT, iconEl: icon(b.key, { size:18, color: b.earned ? '#8A6614' : MUTED, fallback:'M12 3l2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17l-5.5 3 1-6.1L3 9.5l6.3-.9z' }) }));
-    // Perks come from the perks table. The app stays in "Term 2 preview" until a partner signs.
-    const perkList = (s.perkRows || []).map(k => ({ id:k.id, partner:k.partner, mark:(String(k.partner || 'B').trim()[0] || 'B').toUpperCase(), offer:k.offer, detail:k.detail, cost:k.cost, terms:k.terms, active:k.active, validDays:k.valid_days }));
-    const perksPreview = !perkList.some(k => k.active);
-    const perkSel = perkList.find(k => k.id === s.perkId) || perkList[0] || { id:'', partner:'', mark:'B', offer:'', detail:'', cost:0, terms:'', active:false, validDays:90 };
+    const perkSel = PERKS.find(k => k.id === s.perkId) || PERKS[0];
     const perkRed = s.redeemed[perkSel.id];
-    const perkCan = !perksPreview && !!perkSel.active && points >= perkSel.cost;
-    const valid = new Date(); valid.setDate(valid.getDate() + (perkSel.validDays || 90));
+    const perksPreview = (p.perksMode ?? 'Term 2 preview') !== 'Live';
+    const perkCan = !perksPreview && points >= perkSel.cost;
+    const valid = new Date(); valid.setMonth(valid.getMonth() + 3);
     const perk = { ...perkSel, redeemed: !!perkRed, notRedeemed: !perkRed, code: perkRed ? perkRed.code : '', redeemedOn: perkRed ? new Date(perkRed.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }) : '',
-      validUntil: new Date(perkRed && perkRed.expiresAt ? perkRed.expiresAt : valid).toLocaleDateString('en-TT', { day:'numeric', month:'short', year:'numeric' }),
+      validUntil: (perkRed ? new Date(new Date(perkRed.atISO).setMonth(new Date(perkRed.atISO).getMonth()+3)) : valid).toLocaleDateString('en-TT', { day:'numeric', month:'short', year:'numeric' }),
       costLabel:`${perkSel.cost} points`, cantAfford: !perkCan, confirming: !!s.confirmRedeem, btnBg: perkCan ? GREEN : '#D8D2E4', btnFg: perkCan ? PAPER : '#5A5E74', btnLabel: perksPreview ? 'Redemption opens in Term 2' : !perkCan ? `Need ${perkSel.cost - points} more points` : s.confirmRedeem ? 'Confirm redemption' : `Redeem for ${perkSel.cost} points` };
     if (sheet.isPerk) { sheet.eyebrow = perkRed ? 'Redeemed perk' : perksPreview ? 'Partner perk · preview' : 'Partner perk'; sheet.title = perkRed ? 'Your code is ready' : perkSel.offer; }
 
@@ -1073,32 +978,21 @@ class Component extends DCLogic {
       primaryCards: cardsSplit.primary, moreCards: cardsSplit.more,
       impactOptions: IMPACTS.map(o => { const on = s.impact===o.id; return { ...o, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, select: () => this.persist({ impact:o.id }) }; }),
       note:s.note, noteCount:s.note.length, setNote: e => this.persist({ note:e.target.value.slice(0,240) }),
-      submitDisabled: !canSubmit || s.submitting || !s.schoolId, submitBg: canSubmit && !s.submitting && s.schoolId ? GREEN : '#D8D2E4', submitFg: canSubmit && !s.submitting && s.schoolId ? PAPER : '#5A5E74',
-      submitLabel: s.submitting ? 'Saving…' : s.saved ? 'Update pulse' : 'Submit pulse',
-      submitHint: s.submitError ? s.submitError : !s.schoolId ? 'Central-team accounts read the network view; they don’t submit a school pulse.' : canSubmit ? '' : !s.topic ? 'Choose one area to continue' : 'Add how much it’s affecting you',
-      showSubmitHint: !canSubmit || !!s.submitError || !s.schoolId,
+      submitDisabled:!canSubmit, submitBg: canSubmit ? GREEN : '#D8D2E4', submitFg: canSubmit ? PAPER : '#5A5E74',
+      submitLabel: s.saved ? 'Update pulse' : 'Submit pulse',
+      submitHint: canSubmit ? '' : !s.topic ? 'Choose one area to continue' : 'Add how much it’s affecting you',
+      showSubmitHint: !canSubmit,
       talkMailto: `mailto:?subject=${encodeURIComponent('A short conversation this week')}&body=${encodeURIComponent(talkMessage)}`,
-      // bloom-pulse-submissions -> pulses upsert. Points are awarded by the insert trigger.
-      submit: async () => { if (!canSubmit || s.submitting || !s.session || !s.schoolId) return;
-        this.setState({ submitting:true, submitError:'' });
-        try {
-          await BloomAPI.upsertPulse({ schoolId:s.schoolId, weekStart:week, topic:s.topic, impact:s.impact, note:s.note, userId:s.session.user.id });
-          this.setState({ saved:true, skipped:false, justSaved:true, screen:2, submitting:false }, () => {
-            setTimeout(() => this.setState({ justSaved:false }), 3500);
-            this.refreshNetwork(); this.refreshRewards();
-          });
-        } catch (e) { this.setState({ submitting:false, submitError:'Couldn’t save your pulse. Check your connection and try again.' }); }
-      },
+      submit: () => { if (!canSubmit) return; const subs = { ...(s.submissions || {}) }; subs[week] = { ...(subs[week] || {}), [s.schoolId]: { topic:s.topic, impact:s.impact, note:s.note, submittedAtISO:new Date().toISOString() } };
+        this.setState({ saved:true, skipped:false, justSaved:true, screen:2, submissions:subs }, () => { try { localStorage.setItem('bloom-pulse-submissions', JSON.stringify(subs)); } catch(e){} setTimeout(() => this.setState({ justSaved:false }), 3500); }); },
       skip: () => this.setState({ skipped:true, saved:false, justSaved:false, screen:2 }),
       savedMsg: 'Pulse saved for this week — thank you.',
       justSaved:s.justSaved, skipped:s.skipped,
-      includedLabel:`${included} of ${nSchools} principal pulses included`,
-      includedDots: Array.from({ length: nSchools }, (_, i) => ({ bg: i < included ? GREEN : BORDER })),
-      hasSuppressed: suppressed > 0,
-      suppressedLabel: `${suppressed} further ${suppressed === 1 ? 'theme' : 'themes'} not shown to protect privacy.`,
+      includedLabel:`${included} of 5 principal pulses included`,
+      includedDots:[0,1,2,3,4].map(i => ({ bg: i < included ? GREEN : BORDER })),
       hotHeading: isHot ? 'Hot now' : 'Top signal', hotItems,
       hasRising: risingItems.length>0, risingItems, hasRadar: radarItems.length>0, radarItems, trends,
-      sharePdf: () => this.printHot({ weekLabel: wl, schoolsTotal: nSchools, suppressed, includedLabel:`${included} of ${nSchools} principal pulses included`, hotHeading: isHot ? 'Hot now' : 'Top signal', hotItems, risingItems, radarItems, trends, today: new Date().toLocaleDateString('en-TT', { day:'numeric', month:'long', year:'numeric' }) }),
+      sharePdf: () => this.printHot({ weekLabel: wl, includedLabel:`${included} of 5 principal pulses included`, hotHeading: isHot ? 'Hot now' : 'Top signal', hotItems, risingItems, radarItems, trends, today: new Date().toLocaleDateString('en-TT', { day:'numeric', month:'long', year:'numeric' }) }),
       pdfBlocked: !!s.pdfBlocked,
       openShare: () => this.setState({ sheet:'share', shareStatus:'' }),
       shareText, shareBtnLabel: s.shareStatus === 'shared' ? 'Shared' : s.shareStatus === 'copied' ? 'Copied to clipboard' : 'Share',
@@ -1107,10 +1001,10 @@ class Component extends DCLogic {
       shareSaved, shareSavedTitle: shareSaved ? 'Saved to your resources' : 'Keep this for later',
       shareSavedSub: shareSaved ? 'Find it under “I need a resource”.' : 'Adds it to “I need a resource” so your team can reuse it.',
       shareSaveLabel: shareSaved ? 'Added' : 'Add to resources', shareSaveBg: shareSaved ? '#D8D2E4' : GREEN, shareSaveFg: shareSaved ? '#5A5E74' : PAPER,
-      addToResources: () => { if (shareSaved) return; this.addShared({ key:shareKey, topic:effTopic, title:micro.title, tryIt:micro.tryIt, text:shareText, atISO:new Date().toISOString() }); },
+      addToResources: () => { if (shareSaved) return; this.saveShared([{ key:shareKey, topic:effTopic, title:micro.title, tryIt:micro.tryIt, text:shareText, atISO:new Date().toISOString() }, ...shared].slice(0, 20)); },
       hasShared: shared.length > 0, sharedCount: shared.length,
       sharedItems: shared.map(x => ({ ...x, topicLabel: (T[x.topic] || T.other).label, dateLabel: new Date(x.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }),
-        reshare: () => this.shareNative(x.text, `Bloom: ${x.title}`), remove: () => this.removeShared(x.id) })),
+        reshare: () => this.shareNative(x.text, `Bloom: ${x.title}`), remove: () => this.saveShared(shared.filter(y => y.key !== x.key)) })),
       editLabel: s.skipped ? 'Share my pulse instead' : 'Edit my pulse',
       toS1: () => this.setState({ screen:1 }), toS2: () => this.setState({ screen:2 }), toS3: () => this.setState({ screen:3 }), toS4: () => this.setState({ screen:4 }),
       s3, micro,
@@ -1135,65 +1029,27 @@ class Component extends DCLogic {
       showUrgentNotice, urgentRouteText: routeConfigured ? 'For urgent concerns, call the CEBM central team now on +1 868-607-2326 (Mon–Fri, 8am–4pm). Lifeline: (800) 5588, available 24/7 for free, confidential emotional support. For child-protection concerns call the Children’s Authority on 996, and call 999 if anyone is at immediate risk.' : 'If anyone is at immediate risk, call emergency services and follow your school’s safeguarding procedure.',
       cContext:s.cContext, setCContext: e => this.setState({ cContext:e.target.value.slice(0,300) }),
       cHelp:s.cHelp, setCHelp: e => this.setState({ cHelp:e.target.value.slice(0,300) }),
-      centralNotSent:!s.cSent, cSent:s.cSent, centralDisabled: !s.cType || s.cSending, centralBg: s.cType && !s.cSending ? GREEN : '#D8D2E4', centralFg: s.cType && !s.cSending ? PAPER : '#5A5E74',
+      centralNotSent:!s.cSent, cSent:s.cSent, centralDisabled:!s.cType, centralBg: s.cType ? GREEN : '#D8D2E4', centralFg: s.cType ? PAPER : '#5A5E74',
       cTypeLabel: (SUPPORT_TYPES.find(t => t.id===s.cType)||{label:''}).label.toLowerCase(), cRef:s.cRef,
-      // bloom-pulse-requests -> support_requests. Only the context the principal chose to
-      // send reaches the central team; pulses.note never does.
-      sendCentral: async () => { if (!s.cType || s.cSending || !s.session || !s.schoolId) return;
-        this.setState({ cSending:true });
-        const stem = `BP-${week.replace(/-/g,'').slice(2)}-`;
-        for (let attempt = 0; attempt < 4; attempt++) {
-          const ref = stem + Math.floor(100 + Math.random() * 900);
-          try {
-            await BloomAPI.insertRequest({ ref, schoolId:s.schoolId, weekStart:week, type:s.cType, topic:effTopic, impact:s.impact, context:s.cContext, help:s.cHelp, userId:s.session.user.id });
-            this.setState({ cSent:true, cRef:ref, cSending:false }, () => this.refreshRequests());
-            return;
-          } catch (e) {
-            if (e && e.code === '23505') continue;   // ref collided, take another
-            break;
-          }
-        }
-        this.setState({ cSending:false });
-      },
-      // Sign-in — Supabase magic link (replaces the demo school picker)
-      needsSchool: s.authStatus !== 'signed_in',
-      schoolName: school.name, schoolShort: school.short_name || school.name.replace('Bloom Academy, ', ''), schoolInitial: (school.short_name || school.name || 'B').trim()[0].toUpperCase(),
-      authIdle: s.authStatus !== 'sent', authSent: s.authStatus === 'sent',
-      authError: !!s.authError, authErrorText: s.authError,
-      email: s.email, setEmail: e => this.setState({ email:e.target.value, authError:'' }),
-      authDisabled: authBusy || !emailOk, authBtnBg: (authBusy || !emailOk) ? '#D8D2E4' : GREEN, authBtnFg: (authBusy || !emailOk) ? '#5A5E74' : PAPER,
-      authBtnLabel: s.authStatus === 'loading' ? 'Checking your session…' : s.authStatus === 'sending' ? 'Sending…' : 'Send me a sign-in link',
-      sendLink: async () => {
-        const email = s.email.trim();
-        if (!EMAIL_RE.test(email) || authBusy) return;
-        this.setState({ authStatus:'sending', authError:'' });
-        try { await BloomAPI.sendMagicLink(email); this.setState({ authStatus:'sent' }); }
-        catch (e) {
-          const notInvited = /not found|signup|disabled|not allowed/i.test((e && e.message) || '');
-          this.setState({ authStatus:'signed_out', authError: notInvited ? 'That address is not on the Bloom pilot list. Ask the central team to add you.' : 'Couldn’t send the link just now. Check your connection and try again.' });
-        }
-      },
-      useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'' }),
+      sendCentral: () => { if (!s.cType) return; const ref = `BP-${week.replace(/-/g,'').slice(2)}-${Math.floor(100+Math.random()*900)}`;
+        const reqs = [{ ref, schoolId:s.schoolId, type:s.cType, topic:effTopic, impact:s.impact, context:s.cContext, help:s.cHelp, atISO:new Date().toISOString() }, ...(s.requests || [])].slice(0, 50);
+        this.setState({ cSent:true, cRef:ref, requests:reqs }, () => { try { localStorage.setItem('bloom-pulse-requests', JSON.stringify(reqs)); } catch (e) {} }); },
+      // Sign-in / demo
+      needsSchool: !s.schoolId, schoolName: school.name, schoolShort: school.name.replace('Bloom Academy, ', ''), schoolInitial: school.name.split(', ')[1] ? school.name.split(', ')[1][0] : 'B',
+      schoolOptions: SCHOOLS.map(x => { const on = s.pendingSchool === x.id, done = !!weekSubs[x.id]; return { ...x, initial: x.name.split(', ')[1][0], selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, status: done ? 'Pulse submitted this week' : 'Not yet submitted this week', select: () => this.setState({ pendingSchool:x.id }) }; }),
+      schoolDisabled: !s.pendingSchool, schoolBtnBg: s.pendingSchool ? GREEN : '#D8D2E4', schoolBtnFg: s.pendingSchool ? PAPER : '#5A5E74',
+      confirmSchool: () => { if (!s.pendingSchool) return; const id = s.pendingSchool; try { localStorage.setItem('bloom-pulse-school', id); } catch (e) {}
+        this.setState({ schoolId:id, topic:null, impact:null, note:'', saved:false, skipped:false, screen:1, sheet:null, ai:{ key:null, status:'idle', data:null, error:'' }, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false }, () => this.loadForSchool(id)); },
       openDemo: () => this.setState({ sheet:'demo' }),
-      // Switching school is admin impersonation only; principals are bound to their profile.
-      canSwitchSchool: role === 'admin',
-      switchSchool: async () => { this.setState({ sheet:null }); await BloomAPI.signOut(); },
-      // Participation only. Which theme another school picked is never sent to this client —
-      // the aggregate on Step 2 is the single cross-school view.
-      schoolRows: (s.schools || []).map((x, i) => { const own = x.id === s.schoolId; const inWeek = own && s.saved && !s.skipped;
-        return { name:x.name, divider: i ? '1px solid #E6E2EB' : 'none', weight: own ? 600 : 400,
-          dot: own ? (inWeek ? GREEN : BORDER) : '#B5A3D2',
-          status: own ? (s.skipped ? 'Skipped' : inWeek ? ((T[s.topic] || T.other).label) : 'No pulse yet') : 'Counted in the network view only' }; }),
+      switchSchool: () => { try { localStorage.removeItem('bloom-pulse-school'); } catch (e) {} this.setState({ schoolId:null, pendingSchool:null, sheet:null }); },
+      schoolRows: SCHOOLS.map((x, i) => { const real = !!weekSubs[x.id] || (x.id === s.schoolId && s.saved); const skippedHere = x.id === s.schoolId && s.skipped; const t = seed[i];
+        return { name:x.name, divider: i ? '1px solid #E6E2EB' : 'none', weight: x.id === s.schoolId ? 600 : 400, dot: t ? (real ? GREEN : '#B5A3D2') : BORDER, status: skippedHere ? 'Skipped' : t ? `${T[t].label}${real ? '' : ' · demo'}` : 'No pulse' }; }),
       inboxCount: `${(s.requests || []).length} ${(s.requests || []).length === 1 ? 'request' : 'requests'}`, hasInbox: (s.requests || []).length > 0, noInbox: !(s.requests || []).length,
-      inboxItems: (s.requests || []).map(q => ({ ...q, typeLabel: (SUPPORT_TYPES.find(t => t.id === q.type) || {label:'Request'}).label, themeLabel: (T[q.topic] || T.other).label, school: ((s.schools || []).find(x => x.id === q.schoolId) || {name:'Unknown school'}).name.replace('Bloom Academy, ', ''), impactLabel: (IMPACTS.find(i => i.id === q.impact) || {label:'not shared'}).label.toLowerCase(), when: new Date(q.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }), hasHelp: !!(q.help && q.help.trim()) })),
-      // Was "Reset demo data". With server-backed data the equivalent is ending the session;
-      // only the device-local draft is cleared here.
-      resetLabel: 'Sign out',
-      resetDemo: async () => {
-        try { localStorage.removeItem('bloom-pulse-draft:' + (s.schoolId || 'none')); } catch (e) {}
-        this.setState({ sheet:null, topic:null, impact:null, note:'', saved:false, skipped:false, screen:1, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, ai:{ key:null, status:'idle', data:null, error:'' } });
-        await BloomAPI.signOut();
-      },
+      inboxItems: (s.requests || []).map(q => ({ ...q, typeLabel: (SUPPORT_TYPES.find(t => t.id === q.type) || {label:'Request'}).label, themeLabel: (T[q.topic] || T.other).label, school: (SCHOOLS.find(x => x.id === q.schoolId) || {name:'Unknown school'}).name.replace('Bloom Academy, ', ''), impactLabel: (IMPACTS.find(i => i.id === q.impact) || {label:'not shared'}).label.toLowerCase(), when: new Date(q.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }), hasHelp: !!(q.help && q.help.trim()) })),
+      resetLabel: s.confirmReset ? 'Tap again to confirm reset' : 'Reset demo data',
+      resetDemo: () => { if (!s.confirmReset) { this.setState({ confirmReset:true }); setTimeout(() => this.setState({ confirmReset:false }), 3000); return; }
+        try { ['bloom-pulse-school','bloom-pulse-submissions','bloom-pulse-requests','bloom-pulse-rewards','bloom-pulse-shared','bloom-pulse-draft', ...SCHOOLS.map(x => 'bloom-pulse-draft:' + x.id)].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+        this.setState({ schoolId:null, pendingSchool:null, submissions:{}, requests:[], redeemed:{}, shared:[], topic:null, impact:null, note:'', saved:false, skipped:false, screen:1, sheet:null, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, confirmReset:false, ai:{ key:null, status:'idle', data:null, error:'' } }); },
       // Perks
       perksTitle: s.saved ? 'Thanks for showing up' : 'Your points and perks',
       perksPreview, perksIntro: perksPreview ? 'Every weekly pulse earns Bloom points now. From Term 2 you’ll spend them with local businesses that back Trinidad & Tobago schools.' : 'Every weekly pulse earns Bloom points. Spend them with local businesses that back Trinidad & Tobago schools.',
@@ -1201,23 +1057,18 @@ class Component extends DCLogic {
       perksSub: perksPreview ? 'The offers Bloom is negotiating for Term 2. Tap one to see how redemption will work.' : 'Offers from businesses supporting Bloom schools. Redeem with points and show the code in store.',
       perksFootnote: perksPreview ? 'Offers are indicative until each partner signs; terms may change. Points: 10 per weekly pulse · +5 for a note · +10 when all five schools take part.' : 'Final terms are set by each partner. Points: 10 per weekly pulse · +5 for a note · +10 when all five schools take part.',
       points, hasEarned: earnedLines.length > 0, earnedLines,
-      streakLabel: s.skipped ? `Streak paused at ${streak}` : `${streak}-week streak`,
+      streakLabel: s.saved ? `${streak}-week streak` : s.skipped ? `Streak paused at ${streak}` : `${streak}-week streak`,
       nextBadge: '8-week streak', nextBadgeProgress: `${streak}/8`, nextBadgePct: `${streak/8*100}%`, nextBadgePctNum: Math.round(streak/8*100),
       badges,
-      networkGoalLabel: `${included} of ${nSchools}`, networkGoalText: fullNetwork ? 'All schools took part — everyone earns +10 points this week.' : `${nSchools - included} more ${nSchools - included === 1 ? 'school' : 'schools'} and every principal earns +10 points.`,
-      perks: perkList.map(k => { const r = s.redeemed[k.id], can = !perksPreview && !!k.active && points >= k.cost; return { ...k, border: r ? GREEN : BORDER, markBg: r ? GREEN : MINT, markFg: r ? PAPER : GREEN,
+      networkGoalLabel: `${included} of 5`, networkGoalText: fullNetwork ? 'All five schools took part — everyone earns +10 points this week.' : `${5 - included} more ${5 - included === 1 ? 'school' : 'schools'} and every principal earns +10 points.`,
+      perks: PERKS.map(k => { const r = s.redeemed[k.id], can = !perksPreview && points >= k.cost; return { ...k, border: r ? GREEN : BORDER, markBg: r ? GREEN : MINT, markFg: r ? PAPER : GREEN,
         costLabel: r ? 'Redeemed' : `${k.cost} pts`, costColor: r ? GREEN : can ? INK : MUTED, status: r ? 'Show code' : perksPreview ? 'Term 2' : can ? 'Available' : `${k.cost - points} more`,
         open: () => this.setState({ sheet:'perk', perkId:k.id }) }; }),
       perk,
-      // bloom-pulse-rewards -> POST /functions/v1/redeem. The code, the expiry and the
-      // points debit are all issued server-side; the client only re-reads the result.
-      redeemPerk: async () => { if (!perkCan || perkRed) return;
-        if (!s.confirmRedeem) { this.setState({ confirmRedeem:true }); clearTimeout(this.redeemT); this.redeemT = setTimeout(() => this.setState({ confirmRedeem:false }), 5000); return; }
-        clearTimeout(this.redeemT);
-        this.setState({ confirmRedeem:false });
-        try { await BloomAPI.redeem(perkSel.id); } catch (e) {}
-        this.refreshRewards();
-      },
+      redeemPerk: () => { if (!perkCan || perkRed) return; if (!s.confirmRedeem) { this.setState({ confirmRedeem:true }); clearTimeout(this.redeemT); this.redeemT = setTimeout(() => this.setState({ confirmRedeem:false }), 5000); return; }
+        clearTimeout(this.redeemT); const code = `BLOOM-${perkSel.id.slice(0,3).toUpperCase()}-${Math.floor(1000+Math.random()*9000)}`;
+        const redeemed = { ...s.redeemed, [perkSel.id]: { code, cost:perkSel.cost, atISO:new Date().toISOString() } };
+        this.setState({ redeemed, confirmRedeem:false }, () => { try { localStorage.setItem('bloom-pulse-rewards', JSON.stringify(redeemed)); } catch (e) {} }); },
     };
   }
 }
