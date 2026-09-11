@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F5F0">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="./image-slot.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script>window.BLOOM_SUPABASE = { url: "https://phnpteeujuaqebzteacd.supabase.co", key: "sb_publishable_SzTl41P5xSLODN4juR-Hwg_Q9BWkfS-" };</script>
+<script src="./supabase-api.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E8E5DE;}
+a{color:#1E3A78}a:hover{color:#14224A}
+button,textarea,input{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+[data-om-starter="ios-frame"] *{scrollbar-width:none}
+[data-om-starter="ios-frame"] *::-webkit-scrollbar{display:none}
+textarea{resize:none}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</helmet>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#14224A"/><text x="50" y="66" text-anchor="middle" font-family="Georgia,serif" font-size="46" font-weight="700" fill="#FEFDF4">B</text></svg></template>
+<div style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px 40px;box-sizing:border-box;">
+<x-import component-from-global-scope="{{ shellName }}" from="./ios-frame.jsx ./shell.js" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;position:relative;background:#F6F5F0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#14224A;-webkit-font-smoothing:antialiased;">
+
+  <div style="padding:{{ padTop }} 20px 12px;display:flex;flex-direction:column;gap:12px;background:#FFFEF9;border-bottom:1px solid #E6E2EB;flex:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <img src="bloom-mark.png" alt="Bloom" style="width:44px;height:44px;display:block;flex:none;object-fit:contain;">
+        <div style="min-width:0;">
+          <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:17px;font-weight:700;line-height:1.1;color:#14224A;letter-spacing:-.01em;">Bloom <span style="font-weight:400;">Principal Pulse</span></div>
+          <div style="font-size:12px;color:#666A80;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ schoolShort }} · {{ weekLabel }}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;flex:none;">
+        <div style="font-size:12px;color:#666A80;white-space:nowrap;">{{ stepLabel }}</div>
+        <button type="button" onClick="{{ openDemo }}" aria-label="Account and demo settings" style="width:40px;height:40px;border-radius:999px;border:none;background:transparent;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.settings }}</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="{{ screen }}" aria-label="Weekly pulse progress">
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4"><div style="flex:1;height:4px;border-radius:2px;background:{{ s.bg }};transition:background .3s;"></div></sc-for>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow:auto;scrollbar-width:none;">
+
+    <sc-if value="{{ isS1 }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="1 Weekly pulse" style="animation:fadeIn .28s ease-out;padding:22px 20px 24px;display:flex;flex-direction:column;gap:22px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">Weekly pulse · 1 of 4</div>
+        <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:8px 0 8px;color:#14224A;text-wrap:pretty;">What’s on your radar this week?</h1>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">Choose the one area that could use more attention right now. It should take about 30 seconds.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" role="radiogroup" aria-label="Area needing attention">
+        <sc-for list="{{ primaryCards }}" as="t" hint-placeholder-count="6">
+          <button type="button" role="radio" aria-checked="{{ t.selected }}" onClick="{{ t.select }}" style="text-align:left;min-height:78px;padding:12px;border-radius:14px;border:{{ t.border }};background:{{ t.bg }};color:#14224A;display:flex;flex-direction:column;justify-content:space-between;gap:10px;transition:background .15s,border-color .15s;" style-hover="background:#F7F5FA" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+            {{ t.iconEl }}
+            <span style="font-size:14px;font-weight:500;line-height:1.3;">{{ t.label }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ showMore }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ moreCards }}" as="t" hint-placeholder-count="8">
+          <button type="button" role="radio" aria-checked="{{ t.selected }}" onClick="{{ t.select }}" style="text-align:left;min-height:78px;padding:12px;border-radius:14px;border:{{ t.border }};background:{{ t.bg }};color:#14224A;display:flex;flex-direction:column;justify-content:space-between;gap:10px;transition:background .15s,border-color .15s;animation:fadeIn .25s ease-out;" style-hover="background:#F7F5FA" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+            {{ t.iconEl }}
+            <span style="font-size:14px;font-weight:500;line-height:1.3;">{{ t.label }}</span>
+          </button>
+        </sc-for>
+        </sc-if>
+        <sc-if value="{{ showMoreButton }}" hint-placeholder-val="{{ true }}">
+          <button type="button" onClick="{{ toggleMore }}" aria-expanded="{{ showMore }}" style="grid-column:1 / -1;min-height:46px;border-radius:999px;border:1.5px dashed #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ moreLabel }}</button>
+        </sc-if>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:10px;">How much is this affecting you right now?</div>
+        <div style="display:flex;gap:8px;" role="radiogroup" aria-label="Impact">
+          <sc-for list="{{ impactOptions }}" as="o" hint-placeholder-count="3">
+            <button type="button" role="radio" aria-checked="{{ o.selected }}" onClick="{{ o.select }}" style="flex:1;min-height:46px;border-radius:999px;border:{{ o.border }};background:{{ o.bg }};font-size:14px;font-weight:500;color:#14224A;transition:background .15s;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ o.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <label for="pulse-note" style="display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:600;margin-bottom:8px;">Anything you’d like to add? <span style="font-size:12px;font-weight:400;color:#666A80;">Optional</span></label>
+        <textarea id="pulse-note" rows="2" maxLength="240" placeholder="One sentence is enough…" value="{{ note }}" onChange="{{ setNote }}" style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6"></textarea>
+        <div style="font-size:12px;color:#666A80;text-align:right;margin-top:6px;">{{ noteCount }}/240</div>
+      </div>
+      <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">
+        {{ ic.lock }}
+        <span><strong style="color:#14224A;font-weight:600;">Designed for safe sharing.</strong> Network views show aggregated themes, not which school chose a sensitive concern.</span>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isS2 }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="2 Network pulse" style="animation:fadeIn .28s ease-out;padding:22px 20px 44px;display:flex;flex-direction:column;gap:22px;">
+      <sc-if value="{{ justSaved }}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#F0ECF6;color:#1E3A78;font-size:13px;font-weight:500;">
+          {{ ic.check }}{{ savedMsg }}
+        </div>
+      </sc-if>
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">Bloom network pulse · 2 of 4</div>
+        <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:8px 0 8px;color:#14224A;">What’s hot across Bloom?</h1>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">A simple view of what principals across all five schools are noticing this week.</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:#666A80;">
+          <span style="display:flex;gap:3px;" aria-hidden="true"><sc-for list="{{ includedDots }}" as="d" hint-placeholder-count="5"><span style="width:8px;height:8px;border-radius:50%;background:{{ d.bg }};"></span></sc-for></span>{{ includedLabel }}
+        </div>
+      </div>
+
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 10px;">{{ hotHeading }}</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ hotItems }}" as="h" hint-placeholder-count="1">
+            <div style="padding:14px 16px;border-radius:14px;background:#FFFEF9;border:1px solid #D8D2E4;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+                <div style="font-size:15px;font-weight:600;">{{ h.label }}</div>
+                <div style="font-size:14px;color:#14224A;font-weight:600;white-space:nowrap;">{{ h.countLabel }}</div>
+              </div>
+              <div role="meter" aria-valuemin="0" aria-valuemax="5" aria-valuenow="{{ h.count }}" aria-label="{{ h.label }}" style="margin-top:10px;height:8px;border-radius:4px;background:#F0ECF6;overflow:hidden;"><div style="height:100%;width:{{ h.pct }};background:#1E3A78;border-radius:4px;transition:width .4s;"></div></div>
+              <div style="margin-top:8px;font-size:12px;font-weight:500;color:{{ h.trendColor }};">{{ h.trendLine }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <sc-if value="{{ hasRising }}" hint-placeholder-val="{{ false }}">
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 10px;">Rising</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <sc-for list="{{ risingItems }}" as="r" hint-placeholder-count="1">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:#FFFEF9;border:1px solid #D8D2E4;font-size:13px;font-weight:500;"><span style="color:#1E3A78;">↑</span>{{ r.label }}<span style="color:#666A80;font-weight:400;">{{ r.delta }}</span></span>
+          </sc-for>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ hasRadar }}" hint-placeholder-val="{{ false }}">
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 10px;">On the radar</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <sc-for list="{{ radarItems }}" as="p" hint-placeholder-count="2">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#F0ECF6;font-size:13px;color:#14224A;">{{ p.label }}<span style="color:#666A80;">{{ p.countLabel }}</span></span>
+          </sc-for>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ hasSuppressed }}" hint-placeholder-val="{{ false }}">
+      <p style="font-size:12px;color:#666A80;line-height:1.5;margin:0;text-wrap:pretty;">{{ suppressedLabel }}</p>
+      </sc-if>
+
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 10px;">Last 4 weeks</h2>
+        <div style="display:flex;flex-direction:column;background:#FFFEF9;border:1px solid #D8D2E4;border-radius:14px;overflow:hidden;">
+          <sc-for list="{{ trends }}" as="tr" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:{{ tr.divider }};">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:500;">{{ tr.label }}</div>
+                <div style="font-size:12px;color:#666A80;margin-top:3px;">{{ tr.tag }} · {{ tr.countsLabel }}</div>
+              </div>
+              <div role="img" aria-label="{{ tr.aria }}" style="display:flex;align-items:flex-end;gap:3px;height:24px;">
+                <sc-for list="{{ tr.bars }}" as="b" hint-placeholder-count="4"><div style="width:7px;height:{{ b.h }};border-radius:2px;background:{{ b.bg }};"></div></sc-for>
+              </div>
+              <div aria-hidden="true" style="width:20px;text-align:center;font-size:16px;color:{{ tr.arrowColor }};">{{ tr.arrow }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <p style="font-size:12px;color:#666A80;line-height:1.5;margin:10px 0 0;text-wrap:pretty;">Hot = 3+ of 5 this week · Rising = more selections than last week · Persistent = appears in 3+ of the last 4 weeks.</p>
+      </section>
+
+      <button type="button" onClick="{{ sharePdf }}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:66px;padding:12px 14px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;transition:background .15s;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+        <span style="width:36px;height:36px;border-radius:10px;background:#F0ECF6;display:flex;align-items:center;justify-content:center;flex:none;">{{ ic.file }}</span>
+        <span style="flex:1;min-width:0;"><span style="display:block;font-size:15px;font-weight:600;line-height:1.3;">Share “What’s hot” as PDF</span><span style="display:block;font-size:13px;color:#666A80;margin-top:2px;line-height:1.35;">One-page summary for your board, PTA or staff briefing</span></span>
+        {{ ic.chevron }}
+      </button>
+      <sc-if value="{{ pdfBlocked }}" hint-placeholder-val="{{ false }}"><div role="status" style="margin-top:-14px;font-size:12px;color:#666A80;text-align:center;">Your browser blocked the new window — allow pop-ups for this site and try again.</div></sc-if>
+
+      <p style="margin:0;font-size:12px;line-height:1.5;color:#666A80;text-wrap:pretty;">Network views are aggregated across five schools. Individual responses and school names are not shown here.</p>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button type="button" onClick="{{ toS3 }}" style="min-height:50px;border-radius:999px;border:none;background:#1E3A78;color:#FFFEF9;font-size:15px;font-weight:600;" style-hover="background:#172E63" style-focus="outline:3px solid #14224A;outline-offset:2px">See my support</button>
+        <button type="button" onClick="{{ toS1 }}" style="min-height:44px;border-radius:999px;border:none;background:transparent;color:#1E3A78;font-size:14px;font-weight:500;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ editLabel }}</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isS3 }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="3 Micro-support" style="animation:fadeIn .28s ease-out;padding:22px 20px 44px;display:flex;flex-direction:column;gap:22px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">Quick support · 3 of 4</div>
+        <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:8px 0 8px;color:#14224A;">Your support for this week</h1>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">An evidence-based idea for a Trinidad &amp; Tobago school, tailored to you, plus routes to more help.</p>
+      </div>
+
+      <div style="padding:16px;border-radius:16px;background:#F0ECF6;border:1px solid #D8D2E4;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="width:36px;height:36px;border-radius:10px;background:#FFFEF9;display:flex;align-items:center;justify-content:center;flex:none;">{{ s3.iconEl }}</span>
+          <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:19px;line-height:1.2;">{{ s3.label }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="padding:6px 12px;border-radius:999px;background:#FFFEF9;border:1px solid #D8D2E4;font-size:13px;">Impact: <strong style="font-weight:600;">{{ s3.impactLabel }}</strong></span>
+          <span style="padding:6px 12px;border-radius:999px;background:#FFFEF9;border:1px solid #D8D2E4;font-size:13px;">{{ s3.sameLabel }}</span>
+        </div>
+        <sc-if value="{{ skipped }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#454A68;line-height:1.45;">You skipped this week, so this is based on the network’s top theme.</div></sc-if>
+      </div>
+
+      <div style="padding:18px;border-radius:16px;background:#FFFEF9;border:1px solid #D8D2E4;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A6614;">{{ ic.clock }}60-second idea</div>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:21px;line-height:1.2;margin:8px 0 10px;">{{ micro.title }}</h2>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#14224A;text-wrap:pretty;">{{ micro.body }}</p>
+        <div style="padding:12px 14px;background:#F8F3E8;border-radius:12px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#8A6614;margin-bottom:4px;">Try this today</div>
+          <div style="font-size:14px;line-height:1.5;">{{ micro.tryIt }}</div>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#666A80;margin-bottom:4px;">Conversation prompt</div>
+          <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.45;color:#14224A;">“{{ micro.prompt }}”</div>
+        </div>
+        <button type="button" onClick="{{ openShare }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;min-height:46px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.share }}Share this support with colleagues</button>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #E6E2EB;display:flex;flex-direction:column;gap:8px;">
+          <button type="button" onClick="{{ toggleEvidence }}" aria-expanded="{{ evidenceOpen }}" aria-controls="evidence-panel" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0;border:none;background:transparent;color:#1E3A78;text-align:left;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">{{ ic.book }}Why this works</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;">{{ evidenceToggleLabel }}<span aria-hidden="true" style="display:inline-flex;transform:{{ evidenceChevron }};transition:transform .2s;">{{ ic.chevronDown }}</span></span>
+          </button>
+          <sc-if value="{{ evidenceOpen }}" hint-placeholder-val="{{ false }}">
+          <div id="evidence-panel" style="display:flex;flex-direction:column;gap:8px;animation:fadeIn .2s ease-out;">
+          <p style="margin:0;font-size:14px;line-height:1.5;color:#14224A;text-wrap:pretty;">{{ micro.evidence }}</p>
+          <div style="font-size:12px;line-height:1.45;color:#666A80;">Source: {{ micro.source }}</div>
+          <div style="display:flex;gap:8px;padding:10px 12px;border-radius:10px;background:#F0ECF6;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.pin }}<span><strong style="color:#14224A;font-weight:600;">In T&amp;T:</strong> {{ micro.local }}</span></div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ evidenceClosed }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;line-height:1.45;color:#666A80;">Source: {{ micro.source }}</div></sc-if>
+        </div>
+      </div>
+
+      <div style="padding:16px 18px;border-radius:16px;background:#FFFEF9;border:1.5px solid {{ aiBorder }};display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">{{ ic.sparkle }}Tailor it to my school</div>
+          <sc-if value="{{ aiDone }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ aiReset }}" style="min-height:32px;padding:0 10px;border-radius:999px;border:none;background:transparent;color:#1E3A78;font-size:13px;font-weight:500;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Show default</button></sc-if>
+        </div>
+        <p style="margin:0;font-size:14px;line-height:1.5;color:#666A80;text-wrap:pretty;">{{ aiHint }}</p>
+        <sc-if value="{{ aiLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#F8F3E8;font-size:13px;line-height:1.5;color:#14224A;">{{ ic.lock }}<span><strong style="font-weight:600;">Not available for safeguarding.</strong> Child-protection guidance follows your school’s protocol and the Children’s Authority (996), not AI. Use the central team route below if you need to talk it through.</span></div>
+        </sc-if>
+        <sc-if value="{{ aiUnlocked }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ aiError }}" hint-placeholder-val="{{ false }}"><div role="alert" style="padding:10px 12px;border-radius:10px;background:#F8F3E8;font-size:13px;line-height:1.45;color:#14224A;">{{ aiErrorText }}</div></sc-if>
+        <button type="button" onClick="{{ aiRefine }}" disabled="{{ aiBusy }}" aria-busy="{{ aiBusy }}" style="min-height:46px;border-radius:999px;border:none;background:{{ aiBtnBg }};color:{{ aiBtnFg }};font-size:15px;font-weight:600;transition:background .2s;" style-hover="background:#172E63" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ aiBtnLabel }}</button>
+        <sc-if value="{{ aiDone }}" hint-placeholder-val="{{ false }}"><div aria-live="polite" style="display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:1.45;color:#666A80;"><div style="display:flex;gap:6px;padding:8px 10px;border-radius:8px;background:#F0ECF6;color:#14224A;">{{ ic.book }}<span><strong style="font-weight:600;">Grounded in:</strong> {{ aiGrounding }}</span></div><span>Written by AI from your pulse and the evidence above only; it adds no new facts. Review it with your own judgement before acting.</span></div></sc-if>
+        </sc-if>
+      </div>
+
+      <section style="display:flex;flex-direction:column;gap:8px;">
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 4px;">More help</h2>
+        <sc-for list="{{ actions }}" as="a" hint-placeholder-count="6">
+          <button type="button" onClick="{{ a.open }}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:66px;padding:12px 14px 12px 14px;border-radius:14px;border:1.5px solid #D8D2E4;background:{{ a.bg }};color:#14224A;transition:background .15s;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+            <span style="width:36px;height:36px;border-radius:10px;background:{{ a.iconBg }};display:flex;align-items:center;justify-content:center;flex:none;">{{ a.iconEl }}</span>
+            <span style="flex:1;min-width:0;"><span style="display:block;font-size:15px;font-weight:600;line-height:1.3;">{{ a.title }}</span><span style="display:block;font-size:13px;color:#666A80;margin-top:2px;line-height:1.35;">{{ a.sub }}</span></span>
+            {{ ic.chevron }}
+          </button>
+        </sc-for>
+        <a href="https://chatgpt.com/g/g-696d4b9b682c8191b00cce3da28a61bc-bloom-gpt-1-2" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:66px;padding:12px 14px;border-radius:14px;border:1.5px solid #14224A;background:#14224A;color:#FFFEF9;text-decoration:none;box-sizing:border-box;transition:background .15s;" style-hover="background:#1E3A78" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+          <img src="poui-mark.png" alt="" style="width:40px;height:40px;border-radius:10px;display:block;flex:none;object-fit:cover;">
+          <span style="flex:1;min-width:0;"><span style="display:block;font-size:15px;font-weight:600;line-height:1.3;">Ask POUI GPT</span><span style="display:block;font-size:13px;color:#C9B8E6;margin-top:2px;line-height:1.35;">Bloom’s pastoral advisor · opens in ChatGPT</span></span>
+          {{ ic.externalLight }}
+        </a>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button type="button" onClick="{{ toS4 }}" style="min-height:50px;border-radius:999px;border:none;background:#1E3A78;color:#FFFEF9;font-size:15px;font-weight:600;" style-hover="background:#172E63" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ perksCta }}</button>
+        <button type="button" onClick="{{ toS2 }}" style="min-height:44px;border-radius:999px;border:none;background:transparent;color:#1E3A78;font-size:14px;font-weight:500;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Back to network view</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isS4 }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="4 Perks" style="animation:fadeIn .28s ease-out;padding:22px 20px 44px;display:flex;flex-direction:column;gap:22px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">Perks · 4 of 4</div>
+        <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:8px 0 8px;color:#14224A;text-wrap:pretty;">{{ perksTitle }}</h1>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">{{ perksIntro }}</p>
+      </div>
+
+      <sc-if value="{{ perksPreview }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:#F8F3E8;border:1px solid #E8D9B0;">
+        <span style="width:36px;height:36px;border-radius:10px;background:#FFFEF9;display:flex;align-items:center;justify-content:center;flex:none;">{{ ic.clockGold }}</span>
+        <span style="flex:1;min-width:0;font-size:13px;line-height:1.5;color:#454A68;"><strong style="display:block;color:#14224A;font-weight:600;font-size:14px;">Coming in Term 2 · preview</strong>Your points are real and carry over. Partner offers open once agreements are signed — until then this shows what redemption will look like.</span>
+      </div>
+      </sc-if>
+
+      <div style="padding:18px;border-radius:16px;background:#14224A;color:#FFFEF9;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <div>
+            <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#C9B8E6;">Bloom points</div>
+            <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:44px;line-height:1;margin-top:6px;font-weight:500;">{{ points }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,254,249,.12);font-size:13px;font-weight:500;">{{ ic.flame }}{{ streakLabel }}</div>
+        </div>
+        <sc-if value="{{ hasEarned }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <sc-for list="{{ earnedLines }}" as="e" hint-placeholder-count="2"><span style="padding:5px 10px;border-radius:999px;background:rgba(255,254,249,.12);font-size:12px;">{{ e }}</span></sc-for>
+        </div>
+        </sc-if>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#C9B8E6;margin-bottom:6px;"><span>Next badge · {{ nextBadge }}</span><span>{{ nextBadgeProgress }}</span></div>
+          <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ nextBadgePctNum }}" aria-label="Progress to next badge" style="height:8px;border-radius:4px;background:rgba(255,254,249,.15);overflow:hidden;"><div style="height:100%;width:{{ nextBadgePct }};background:#D9B44A;border-radius:4px;transition:width .4s;"></div></div>
+        </div>
+      </div>
+
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 10px;">Badges</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <sc-for list="{{ badges }}" as="b" hint-placeholder-count="4">
+            <div aria-label="{{ b.aria }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid #D8D2E4;background:{{ b.bg }};opacity:{{ b.opacity }};">
+              <span style="width:32px;height:32px;border-radius:10px;background:{{ b.iconBg }};display:flex;align-items:center;justify-content:center;flex:none;">{{ b.iconEl }}</span>
+              <span style="min-width:0;"><span style="display:block;font-size:13px;font-weight:600;line-height:1.3;">{{ b.label }}</span><span style="display:block;font-size:12px;color:#666A80;margin-top:1px;">{{ b.sub }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:14px 16px;border-radius:14px;background:#FFFEF9;border:1px solid #D8D2E4;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+          <div style="font-size:15px;font-weight:600;">Network goal this week</div>
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;">{{ networkGoalLabel }}</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:10px;" aria-hidden="true"><sc-for list="{{ includedDots }}" as="d" hint-placeholder-count="5"><span style="flex:1;height:8px;border-radius:4px;background:{{ d.bg }};"></span></sc-for></div>
+        <div style="margin-top:8px;font-size:13px;line-height:1.45;color:#666A80;">{{ networkGoalText }}</div>
+      </section>
+
+      <section>
+        <h2 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;margin:0 0 4px;">{{ perksHeading }}</h2>
+        <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#666A80;text-wrap:pretty;">{{ perksSub }}</p>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;" aria-label="Partner logos">
+          <div style="height:64px;border-radius:12px;background:#FFFEF9;border:1px solid #D8D2E4;padding:8px;box-sizing:border-box;color:#666A80;"><image-slot id="perk-logo-starbucks" shape="rect" fit="contain" placeholder="Starbucks logo" style="width:100%;height:100%;"></image-slot></div>
+          <div style="height:64px;border-radius:12px;background:#FFFEF9;border:1px solid #D8D2E4;padding:8px;box-sizing:border-box;color:#666A80;"><image-slot id="perk-logo-rik" shape="rect" fit="contain" placeholder="RIK logo" style="width:100%;height:100%;"></image-slot></div>
+          <div style="height:64px;border-radius:12px;background:#FFFEF9;border:1px solid #D8D2E4;padding:8px;box-sizing:border-box;color:#666A80;"><image-slot id="perk-logo-tecu" shape="rect" fit="contain" placeholder="TECU logo" style="width:100%;height:100%;"></image-slot></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ perks }}" as="k" hint-placeholder-count="3">
+            <button type="button" onClick="{{ k.open }}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:76px;padding:14px;border-radius:14px;border:1.5px solid {{ k.border }};background:#FFFEF9;color:#14224A;transition:background .15s;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+              <span style="width:44px;height:44px;border-radius:12px;background:{{ k.markBg }};color:{{ k.markFg }};display:flex;align-items:center;justify-content:center;flex:none;font-family:'Source Serif 4',Georgia,serif;font-size:20px;font-weight:700;">{{ k.mark }}</span>
+              <span style="flex:1;min-width:0;"><span style="display:block;font-size:12px;color:#666A80;">{{ k.partner }}</span><span style="display:block;font-size:15px;font-weight:600;line-height:1.3;margin-top:1px;">{{ k.offer }}</span><span style="display:block;font-size:13px;color:#666A80;margin-top:3px;line-height:1.35;">{{ k.detail }}</span></span>
+              <span style="flex:none;text-align:right;"><span style="display:block;font-size:13px;font-weight:600;color:{{ k.costColor }};white-space:nowrap;">{{ k.costLabel }}</span><span style="display:block;font-size:11px;color:#666A80;margin-top:2px;">{{ k.status }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <p style="font-size:12px;color:#666A80;line-height:1.5;margin:10px 0 0;text-wrap:pretty;">{{ perksFootnote }}</p>
+      </section>
+
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:#F0ECF6;">
+        <span style="width:36px;height:36px;border-radius:10px;background:#FFFEF9;display:flex;align-items:center;justify-content:center;flex:none;">{{ ic.phoneLg }}</span>
+        <span style="flex:1;min-width:0;font-size:13px;line-height:1.45;color:#454A68;"><strong style="display:block;color:#14224A;font-weight:600;font-size:14px;">CEBM central team</strong>Mon–Fri, 8am–4pm · <a href="tel:+18686072326" style="color:#1E3A78;font-weight:600;text-decoration:none;white-space:nowrap;">+1 868-607-2326</a><span style="display:block;margin-top:6px;padding-top:6px;border-top:1px solid #D8D2E4;"><strong style="color:#14224A;font-weight:600;">Lifeline:</strong> <a href="tel:8005588" style="color:#1E3A78;font-weight:600;text-decoration:none;white-space:nowrap;">(800) 5588</a> · 24/7 free, confidential emotional support</span></span>
+      </div>
+
+      <div style="text-align:center;">
+        <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#666A80;">That’s your pulse for this week. Bloom will invite you again next Monday.</p>
+        <button type="button" onClick="{{ toS3 }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:none;background:transparent;color:#1E3A78;font-size:14px;font-weight:500;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Back to my support</button>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ isS1 }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:none;padding:10px 20px {{ padBottom }};display:flex;flex-direction:column;gap:8px;background:#FFFEF9;border-top:1px solid #E6E2EB;">
+    <sc-if value="{{ showSubmitHint }}" hint-placeholder-val="{{ false }}"><div aria-live="polite" style="font-size:12px;color:#666A80;text-align:center;">{{ submitHint }}</div></sc-if>
+    <div style="display:flex;gap:10px;">
+    <button type="button" onClick="{{ skip }}" style="min-height:50px;padding:0 20px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:15px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Skip</button>
+    <button type="button" onClick="{{ submit }}" disabled="{{ submitDisabled }}" aria-disabled="{{ submitDisabled }}" style="flex:1;min-height:50px;border-radius:999px;border:none;background:{{ submitBg }};color:{{ submitFg }};font-size:15px;font-weight:600;transition:background .2s;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ submitLabel }}</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ needsSchool }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="0 Sign in" style="position:absolute;inset:0;z-index:30;background:#F6F5F0;overflow:auto;padding:{{ padTop }} 20px 32px;display:flex;flex-direction:column;gap:22px;animation:fadeIn .28s ease-out;">
+    <div style="display:flex;align-items:center;gap:14px;margin-top:20px;">
+      <img src="bloom-mark.png" alt="" style="width:56px;height:56px;display:block;object-fit:contain;flex:none;">
+      <div>
+        <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;line-height:1;letter-spacing:.06em;color:#14224A;">BLOOM</div>
+        <div style="font-size:12px;font-weight:500;letter-spacing:.04em;color:#666A80;margin-top:5px;">Building communities in education</div>
+      </div>
+    </div>
+    <div>
+      <h1 style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;margin:0 0 8px;color:#14224A;text-wrap:pretty;">Welcome to Principal Pulse</h1>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:#666A80;text-wrap:pretty;">Sign in with your school email and we’ll send you a link — no password to remember. Your weekly pulse is tied to your school; the network view only ever shows counts.</p>
+    </div>
+
+    <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <label for="signin-email" style="font-size:13px;font-weight:600;color:#14224A;">School email address</label>
+      <input id="signin-email" type="email" autoComplete="email" placeholder="you@bloomacademy.tt" value="{{ email }}" onChange="{{ setEmail }}" style="display:block;width:100%;box-sizing:border-box;min-height:50px;padding:12px 14px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6" />
+      <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+        <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;text-wrap:pretty;">{{ authErrorText }}</p>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ authSent }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;">
+      <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;line-height:1.2;color:#14224A;">Check your email</div>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:#666A80;text-wrap:pretty;">We’ve sent a sign-in link to <strong style="color:#14224A;font-weight:600;">{{ email }}</strong>. Open it on this device to continue. The link expires in one hour.</p>
+      <button type="button" onClick="{{ useAnotherEmail }}" style="align-self:flex-start;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Use a different email</button>
+    </div>
+    </sc-if>
+
+    <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.lock }}<span><strong style="color:#14224A;font-weight:600;">Invited principals only.</strong> Sign-in works for the five Bloom school addresses and the central team. Your note stays with your school — it is never shown to colleagues or the central team.</span></div>
+
+    <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ sendLink }}" disabled="{{ authDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ authBtnBg }};color:{{ authBtnFg }};font-size:15px;font-weight:600;margin-top:auto;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ authBtnLabel }}</button>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(20,34,74,.38);"></div>
+    <div role="dialog" aria-modal="true" aria-labelledby="sheet-title" ref="{{ sheetRef }}" onKeyDown="{{ trapFocus }}" tabIndex="-1" style="position:relative;max-height:84%;overflow:auto;background:#FFFEF9;border-radius:24px 24px 0 0;padding:14px 20px {{ sheetPadBottom }};animation:sheetUp .25s ease-out;box-shadow:0 -8px 30px rgba(20,34,74,.12);">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;">{{ sheet.eyebrow }}</div>
+        <button type="button" onClick="{{ closeSheet }}" aria-label="Close" style="width:44px;height:44px;border-radius:999px;border:none;background:#F0ECF6;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.close }}</button>
+      </div>
+      <h2 id="sheet-title" style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:22px;line-height:1.2;margin:4px 0 14px;text-wrap:pretty;outline:none;">{{ sheet.title }}</h2>
+
+      <sc-if value="{{ sheet.isResource }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#666A80;">A template for {{ s3.labelLower }}. Fill the blanks on paper or in your notes — it takes a few minutes.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <sc-for list="{{ sheet.lines }}" as="l" hint-placeholder-count="3">
+            <div style="padding:14px;border-radius:12px;background:#F8F3E8;font-size:15px;line-height:1.45;">{{ l }}</div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasShared }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:20px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;margin-bottom:10px;">{{ ic.share }}Shared with colleagues · {{ sharedCount }}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <sc-for list="{{ sharedItems }}" as="si" hint-placeholder-count="1">
+              <div style="padding:14px;border-radius:12px;border:1px solid #D8D2E4;background:#FFFEF9;">
+                <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#666A80;"><span>{{ si.topicLabel }}</span><span>{{ si.dateLabel }}</span></div>
+                <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:17px;line-height:1.25;margin-top:4px;">{{ si.title }}</div>
+                <div style="font-size:14px;line-height:1.45;margin-top:6px;color:#14224A;">{{ si.tryIt }}</div>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                  <button type="button" onClick="{{ si.reshare }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Share again</button>
+                  <button type="button" onClick="{{ si.remove }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:none;background:transparent;color:#666A80;font-size:13px;font-weight:500;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Remove</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isShare }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#666A80;text-wrap:pretty;">Send this week’s idea to your senior team, a head of department or a fellow principal. Nothing from your pulse rating or note is included.</p>
+        <div style="padding:14px 16px;border-radius:12px;background:#F0ECF6;font-size:14px;line-height:1.55;color:#14224A;white-space:pre-wrap;">{{ shareText }}</div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button type="button" onClick="{{ doShare }}" style="flex:1;min-height:48px;border-radius:999px;border:none;background:#1E3A78;color:#FFFEF9;font-size:15px;font-weight:600;" style-hover="background:#172E63" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ shareBtnLabel }}</button>
+          <a href="{{ shareMailto }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:15px;font-weight:500;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Email</a>
+        </div>
+        <div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#F8F3E8;display:flex;align-items:center;gap:12px;">
+          <span style="flex:1;font-size:13px;line-height:1.45;color:#14224A;"><strong style="font-weight:600;">{{ shareSavedTitle }}</strong><br>{{ shareSavedSub }}</span>
+          <button type="button" onClick="{{ addToResources }}" disabled="{{ shareSaved }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:none;background:{{ shareSaveBg }};color:{{ shareSaveFg }};font-size:13px;font-weight:600;white-space:nowrap;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ shareSaveLabel }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isTool }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#666A80;">Five steps for this week. Tick them off as you go — {{ checkedLabel }}.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <sc-for list="{{ checklist }}" as="c" hint-placeholder-count="5">
+            <button type="button" role="checkbox" aria-checked="{{ c.checked }}" onClick="{{ c.toggle }}" style="display:flex;align-items:flex-start;gap:12px;text-align:left;min-height:52px;padding:12px 14px;border-radius:12px;border:{{ c.border }};background:{{ c.bg }};color:#14224A;font-size:15px;line-height:1.45;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">
+              <span style="width:22px;height:22px;border-radius:7px;border:1.5px solid {{ c.boxBorder }};background:{{ c.boxBg }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;">{{ ic.tickSmall }}</span>
+              <span style="text-decoration:{{ c.deco }};color:{{ c.color }};"><span style="color:#666A80;font-weight:600;margin-right:6px;">{{ c.n }}</span>{{ c.text }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isIdea }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;font-size:15px;line-height:1.55;">{{ sheet.body }}</p>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isPeer }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.55;">{{ sheet.body }}</p>
+        <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">
+          {{ ic.lock }}
+          <span>Shared as practice themes only. No school or principal is identified, and {{ sheet.peerCount }} chose this theme this week.</span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isTalk }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#666A80;">A short message you can copy into email or a chat with whoever you’d like to talk to.</p>
+        <div style="padding:14px 16px;border-radius:12px;background:#F0ECF6;font-size:15px;line-height:1.55;color:#14224A;">{{ talkMessage }}</div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button type="button" onClick="{{ copyTalk }}" style="flex:1;min-height:48px;border-radius:999px;border:none;background:#1E3A78;color:#FFFEF9;font-size:15px;font-weight:600;" style-hover="background:#172E63" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ copyLabel }}</button>
+          <button type="button" onClick="{{ openCentralFromTalk }}" style="flex:1;min-height:48px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:15px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Send to central team</button>
+        </div>
+        <a href="{{ talkMailto }}" style="display:block;text-align:center;margin-top:12px;font-size:14px;font-weight:500;color:#1E3A78;text-decoration:none;min-height:44px;line-height:44px;">Open in email instead</a>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isTalk }}" hint-placeholder-val="{{ false }}">
+        <a href="tel:+18686072326" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;min-height:44px;font-size:14px;font-weight:500;color:#1E3A78;text-decoration:none;">{{ ic.phone }}Or call CEBM central team: +1 868-607-2326</a>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#666A80;text-align:center;">Lifeline: <a href="tel:8005588" style="color:#1E3A78;font-weight:600;text-decoration:none;">(800) 5588</a> — 24/7 free, confidential emotional support.</p>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isDemo }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F0ECF6;">
+            <span style="width:36px;height:36px;border-radius:10px;background:#FFFEF9;color:#1E3A78;display:flex;align-items:center;justify-content:center;flex:none;font-family:'Source Serif 4',Georgia,serif;font-size:16px;font-weight:700;">{{ schoolInitial }}</span>
+            <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:600;">{{ schoolName }}</span><span style="display:block;font-size:12px;color:#666A80;margin-top:2px;">Signed in as principal</span></span>
+            <sc-if value="{{ canSwitchSchool }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ switchSchool }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Switch</button>
+            </sc-if>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><div style="font-size:14px;font-weight:600;">This week across the network</div><div style="font-size:12px;color:#666A80;">{{ weekLabel }}</div></div>
+            <div style="display:flex;flex-direction:column;border:1px solid #D8D2E4;border-radius:12px;overflow:hidden;background:#FFFEF9;">
+              <sc-for list="{{ schoolRows }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:{{ r.divider }};font-size:13px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:{{ r.dot }};flex:none;"></span>
+                  <span style="flex:1;min-width:0;font-weight:{{ r.weight }};">{{ r.name }}</span>
+                  <span style="color:#666A80;">{{ r.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Schools without a real submission on this device use seeded demo data. Switch school to submit as another principal and watch the network view change.</p>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><div style="font-size:14px;font-weight:600;">Central-team inbox</div><div style="font-size:12px;color:#666A80;">{{ inboxCount }}</div></div>
+            <sc-if value="{{ hasInbox }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ inboxItems }}" as="q" hint-placeholder-count="1">
+                <div style="padding:12px 14px;border-radius:12px;border:1px solid #D8D2E4;background:#FFFEF9;font-size:13px;line-height:1.45;">
+                  <div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">{{ q.typeLabel }} · {{ q.themeLabel }}</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#666A80;">{{ q.ref }}</span></div>
+                  <div style="color:#666A80;margin-top:2px;">{{ q.school }} · impact {{ q.impactLabel }} · {{ q.when }}</div>
+                  <sc-if value="{{ q.hasHelp }}" hint-placeholder-val="{{ false }}"><div style="margin-top:6px;">“{{ q.help }}”</div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+            <sc-if value="{{ noInbox }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 14px;border-radius:12px;background:#F6F5F0;font-size:13px;color:#666A80;">No requests yet. Requests sent from “I need central-team support” appear here.</div></sc-if>
+          </div>
+          <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
+            <button type="button" onClick="{{ resetDemo }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:14px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ resetLabel }}</button>
+            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Ends your session on this device. Your pulses, requests, points and shared resources stay on your school’s account.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isPerk }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="width:44px;height:44px;border-radius:12px;background:#F0ECF6;color:#1E3A78;display:flex;align-items:center;justify-content:center;flex:none;font-family:'Source Serif 4',Georgia,serif;font-size:20px;font-weight:700;">{{ perk.mark }}</span>
+            <div><div style="font-size:13px;color:#666A80;">{{ perk.partner }}</div><div style="font-size:15px;font-weight:600;">{{ perk.offer }}</div></div>
+          </div>
+          <p style="margin:0;font-size:15px;line-height:1.55;">{{ perk.detail }}</p>
+          <sc-if value="{{ perk.redeemed }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px;border-radius:14px;background:#F8F3E8;text-align:center;">
+              <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A6614;">Show this code in store</div>
+              <div style="font-family:ui-monospace,Menlo,monospace;font-size:26px;letter-spacing:.08em;margin-top:8px;color:#14224A;">{{ perk.code }}</div>
+              <div style="font-size:12px;color:#666A80;margin-top:6px;">Redeemed {{ perk.redeemedOn }} · valid until {{ perk.validUntil }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ perk.notRedeemed }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;justify-content:space-between;padding:12px 14px;border-radius:12px;background:#F0ECF6;font-size:14px;"><span style="color:#666A80;">Cost</span><span style="font-weight:600;">{{ perk.costLabel }}</span></div>
+            <button type="button" onClick="{{ redeemPerk }}" disabled="{{ perk.cantAfford }}" style="min-height:50px;border-radius:999px;border:none;background:{{ perk.btnBg }};color:{{ perk.btnFg }};font-size:15px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ perk.btnLabel }}</button>
+            <sc-if value="{{ perk.confirming }}" hint-placeholder-val="{{ false }}"><div aria-live="polite" style="font-size:12px;line-height:1.5;color:#666A80;text-align:center;margin-top:-6px;">This spends {{ perk.costLabel }} and can’t be undone. Tap again to confirm.</div></sc-if>
+            <sc-if value="{{ perksPreview }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;line-height:1.5;color:#666A80;text-align:center;margin-top:-6px;">Preview only — your points carry over to Term 2.</div></sc-if>
+          </sc-if>
+          <div style="font-size:12px;line-height:1.5;color:#666A80;"><strong style="color:#14224A;font-weight:600;">Terms.</strong> {{ perk.terms }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheet.isCentral }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ centralNotSent }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div>
+              <div style="font-size:14px;font-weight:600;margin-bottom:8px;">What kind of support?</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" role="radiogroup" aria-label="Support type">
+                <sc-for list="{{ supportTypes }}" as="st" hint-placeholder-count="4">
+                  <button type="button" role="radio" aria-checked="{{ st.selected }}" onClick="{{ st.select }}" style="min-height:46px;border-radius:12px;border:{{ st.border }};background:{{ st.bg }};font-size:14px;font-weight:500;color:#14224A;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ st.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <sc-if value="{{ showUrgentNotice }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:12px 14px;border-radius:12px;background:#F8F3E8;font-size:13px;line-height:1.5;color:#14224A;">
+                <strong style="font-weight:600;">This app doesn’t replace Bloom’s safeguarding or emergency procedures.</strong> {{ urgentRouteText }}
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;background:#F0ECF6;font-size:14px;">
+              <div><span style="color:#666A80;">Theme</span> · {{ s3.label }}</div>
+              <div><span style="color:#666A80;">Impact</span> · {{ s3.impactLabel }}</div>
+            </div>
+            <div>
+              <label for="central-context" style="display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:600;margin-bottom:8px;">Context <span style="font-size:12px;font-weight:400;color:#666A80;">Optional</span></label>
+              <textarea id="central-context" rows="2" maxLength="300" placeholder="Anything the central team should know…" value="{{ cContext }}" onChange="{{ setCContext }}" style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6"></textarea>
+            </div>
+            <div>
+              <label for="central-help" style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">What would help most?</label>
+              <textarea id="central-help" rows="2" maxLength="300" placeholder="e.g. a 20-minute call this week" value="{{ cHelp }}" onChange="{{ setCHelp }}" style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6"></textarea>
+            </div>
+            <button type="button" onClick="{{ sendCentral }}" disabled="{{ centralDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ centralBg }};color:{{ centralFg }};font-size:15px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">Send request</button>
+            <p style="margin:0;font-size:12px;line-height:1.5;color:#666A80;">Only the central team sees this request. It is not part of the network view.</p>
+            <a href="tel:+18686072326" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:999px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.phone }}Call CEBM central team · +1 868-607-2326</a>
+            <p style="margin:-8px 0 0;font-size:12px;line-height:1.5;color:#666A80;text-align:center;">Mon–Fri, 8am–4pm. Faster than a written request when you need to talk today.</p>
+            <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#F0ECF6;font-size:13px;line-height:1.5;color:#454A68;">{{ ic.heart }}<span><strong style="color:#14224A;font-weight:600;">Lifeline:</strong> Call <a href="tel:8005588" style="color:#1E3A78;font-weight:600;text-decoration:none;white-space:nowrap;">(800) 5588</a> — available 24/7 for free, confidential emotional support.</span></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ cSent }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start;">
+            <span style="width:44px;height:44px;border-radius:50%;background:#1E3A78;display:flex;align-items:center;justify-content:center;">{{ ic.tickLarge }}</span>
+            <p style="margin:0;font-size:15px;line-height:1.55;">Your <strong style="font-weight:600;">{{ cTypeLabel }}</strong> request about {{ s3.labelLower }} has been sent. Reference <span style="font-family:ui-monospace,Menlo,monospace;font-size:14px;">{{ cRef }}</span>. The central team reviews new requests each working day and will reply to you directly. Need to talk sooner? Call CEBM central team on <a href="tel:+18686072326" style="color:#1E3A78;font-weight:600;text-decoration:none;white-space:nowrap;">+1 868-607-2326</a> (Mon–Fri, 8am–4pm).</p>
+            <sc-if value="{{ showUrgentNotice }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:12px 14px;border-radius:12px;background:#F8F3E8;font-size:13px;line-height:1.5;color:#14224A;"><strong style="font-weight:600;">For anything urgent, follow Bloom’s established route now.</strong> {{ urgentRouteText }}</div>
+            </sc-if>
+            <button type="button" onClick="{{ closeSheet }}" style="min-height:48px;padding:0 24px;border-radius:999px;border:none;background:#1E3A78;color:#FFFEF9;font-size:15px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">Done</button>
+          </div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;urgentRouteConfigured&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Organisation&quot;}}">
+const INK='#14224A', GREEN='#1E3A78', MINT='#F0ECF6', BORDER='#D8D2E4', PAPER='#FFFEF9', MUTED='#666A80', WARM='#F8F3E8';
+
+const TOPICS = [
+  {id:'workload', label:'Workload & wellbeing', icon:'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z'},
+  {id:'staffing', label:'Staffing & capacity', icon:'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M22 20a6 6 0 0 0-6-6'},
+  {id:'teaching', label:'Teaching & learning', icon:'M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zM4 5v16M8 7h8'},
+  {id:'behaviour', label:'Student behaviour', icon:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'},
+  {id:'attendance', label:'Attendance', icon:'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4'},
+  {id:'safeguarding', label:'Safeguarding', icon:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z'},
+  {id:'parents', label:'Parent/community relationships', icon:'M4 11l8-7 8 7v9H4z'},
+  {id:'send', label:'Special needs & inclusion', icon:'M12 3a9 9 0 1 0 0 18M12 3a9 9 0 0 1 0 18M3 12h18'},
+  {id:'culture', label:'Leadership & culture', icon:'M5 21V4M5 4h13l-2 4 2 4H5'},
+  {id:'confidence', label:'Staff confidence', icon:'M12 3v3M12 18v3M3 12h3M18 12h3M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'},
+  {id:'resources', label:'Resources / finance', icon:'M12 3v18M7 8c0-2 2.5-3 5-3s5 1 5 3-2.5 3-5 3-5 1-5 3 2.5 3 5 3 5-1 5-3'},
+  {id:'change', label:'Change / implementation', icon:'M4 12a8 8 0 0 1 14-5l2 2M20 5v4h-4M20 12a8 8 0 0 1-14 5l-2-2M4 19v-4h4'},
+  {id:'data', label:'Data / accountability', icon:'M4 20v-8M10 20V6M16 20v-9M2 20h20'},
+  {id:'other', label:'Something else', icon:'M5 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0M11 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0M17 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0'},
+];
+const T = Object.fromEntries(TOPICS.map(t=>[t.id,t]));
+const IMPACTS = [{id:'little',label:'A little',phrase:'a little'},{id:'quite_a_bit',label:'Quite a bit',phrase:'quite a bit'},{id:'a_lot',label:'A lot',phrase:'a lot'}];
+
+const MICRO = {
+  workload:{title:'Stop → Delegate → Protect',body:'When pressure is high, separate what must happen from what has simply become habitual. Reduce one demand before adding another improvement action.',tryIt:'Write three lines: one thing to stop, one thing to delegate, and one protected block of leadership time.',prompt:'What are we doing that takes significant time but adds the least value?',evidence:'Leadership time spent on teaching and learning has the strongest link to student outcomes of any principal activity; administrative load crowds it out unless it is deliberately protected.',source:'Robinson, Lloyd & Rowe (2008), Educational Administration Quarterly; MoE Trinidad & Tobago, Education Policy Paper 2017–2022 (school-based management).',local:'Ministry returns, term reports and the SEA/CSEC calendar cluster demand at predictable points — schedule your pause around them.'},
+  staffing:{title:'Name the constraint before solving it',body:'Distinguish vacancy, capability, time and deployment. Start with the real limiting constraint.',tryIt:'Complete: The capacity issue is mainly ___, and the smallest useful change this week is ___.',prompt:'Where are we relying on goodwill rather than a sustainable staffing arrangement?',evidence:'How staff are deployed inside a school explains more variation in outcomes than headcount alone; leaders who restructure roles and timetables release capacity faster than new hires arrive.',source:'Leithwood, Harris & Hopkins (2020), Seven strong claims revisited, School Leadership & Management.',local:'Vacancies filled through the Teaching Service Commission take time; within-school redeployment is the lever a principal controls this term.'},
+  teaching:{title:'Choose one observable improvement',body:'Turn broad improvement goals into one behaviour that can be seen in classrooms, books or student talk.',tryIt:'This week we want to see more ___ because ___.',prompt:'What would we actually notice if this improvement were taking hold?',evidence:'Leading and participating in teacher learning has an effect size of about 0.84 on student outcomes — roughly twice that of any other leadership dimension studied.',source:'Robinson, Lloyd & Rowe (2008); Hattie (2009), Visible Learning.',local:'Anchor the focus in the national curriculum standards and the next SEA, CSEC or CAPE checkpoint so teachers see the connection.'},
+  behaviour:{title:'Look for the pattern, not the incident',body:'Check time, place, student group and trigger across recent incidents before choosing a response.',tryIt:'Review the last five significant incidents and circle any repeated time, location or trigger.',prompt:'What predictable situation is producing the most avoidable behaviour demand?',evidence:'Consistent routines and proactive classroom management reduce incidents more reliably than escalating sanctions; the effect is largest when the whole staff apply the same few routines.',source:'Education Endowment Foundation (2019), Improving Behaviour in Schools; MoE Trinidad & Tobago, National School Code of Conduct.',local:'The National School Code of Conduct expects graduated, preventive responses; Student Support Services Division (SSSD) counsellors can be looped in before a pattern hardens.'},
+  attendance:{title:'Move from percentage to student story',body:'Segment the concern. Whole-school percentage matters, but the next action usually sits with a small group of students.',tryIt:'Identify five students where one supportive action this week could make the biggest difference.',prompt:'Which absence pattern are we treating as one problem when it is actually several?',evidence:'Chronic absence is concentrated in a small share of students and responds to personalised outreach — a call or visit that addresses the specific barrier — far better than whole-school messaging.',source:'Attendance Works research briefs on chronic absence; EEF (2022) evidence review on attendance interventions.',local:'Transport cost, weather and caring duties are common drivers in Trinidad & Tobago — ask before assuming; the Education Act places attendance duties on both school and parent.'},
+  safeguarding:{title:'Clarity beats assumption',body:'Staff confidence comes from knowing exactly what to notice, record and escalate.',tryIt:'Ask one colleague to explain the reporting route back to you. Hesitation shows where a reminder may help.',prompt:'Where could ambiguity delay a safeguarding response?',evidence:'Most safeguarding failures traced in case reviews involve delayed or unclear escalation rather than missing policy; short, repeated rehearsal of the route is more effective than annual training alone.',source:'Children Act 2012 (Trinidad & Tobago), mandatory reporting provisions; Children’s Authority of Trinidad & Tobago guidance.',local:'Suspected abuse must be reported to the Children’s Authority (hotline 996). Nothing in this app replaces your school’s child-protection protocol or an SSSD referral.'},
+  parents:{title:'Separate heat from the underlying need',body:'Acknowledge emotion, identify the solvable issue, hold the right boundary, then agree the next step.',tryIt:'Write: emotion heard / issue to solve / boundary to hold / next step.',prompt:'What does this family need to understand, and what do they need to feel heard about?',evidence:'Family engagement tied to specific learning goals improves outcomes; general contact does not. Trust builds fastest when parents hear from the school on good days, not only bad ones.',source:'Epstein (2011), School, Family and Community Partnerships; EEF (2018), Working with Parents to Support Children’s Learning.',local:'Work through the PTA and, in denominational schools, the board under the Concordat; a short written follow-up carries weight with families.'},
+  send:{title:'Reduce the gap between plan and practice',body:'Prioritise the adjustment that most changes access today and ensure relevant adults understand it.',tryIt:'What is the single adjustment every relevant adult needs to remember?',prompt:'Which reasonable adjustment is most important — and is it consistently understood?',evidence:'Inclusive practice works when adjustments are few, explicit and delivered by every adult; high-quality teaching for all students is the first and most effective adjustment.',source:'EEF (2020), Special Educational Needs in Mainstream Schools; MoE Trinidad & Tobago inclusive education policy direction.',local:'SSSD’s special education officers and diagnostic services can support assessment; keep the classroom adjustment simple while you wait.'},
+  culture:{title:'Make the invisible norm visible',body:'Culture is shaped by what leaders notice, reward, challenge and allow.',tryIt:'At Bloom, when ___ happens, we want leaders to consistently ___.',prompt:'What are people learning from what we currently tolerate or celebrate?',evidence:'Relational trust among adults is one of the strongest predictors of whether a school improves; schools with high trust were three times more likely to improve reading and mathematics.',source:'Bryk & Schneider (2002), Trust in Schools.',local:'With staff on short-term or on-the-job-training contracts moving between terms, norms that are stated aloud survive turnover better than norms that are assumed.'},
+  confidence:{title:'Confidence grows through small successful action',body:'Pair information with a safe opportunity to rehearse a specific action and receive feedback.',tryIt:'Create a 10-minute rehearsal before the skill is needed live.',prompt:'What do staff need to practise, not just be told?',evidence:'Teacher self-efficacy is built mainly through mastery experiences and seeing peers succeed; information sessions alone rarely shift it.',source:'Bandura (1997), Self-Efficacy; Tschannen-Moran & Woolfolk Hoy (2001), Teaching and Teacher Education.',local:'Use department time or a short slot in the Friday staff meeting; keep rehearsal low-stakes and unobserved by appraisers.'},
+  resources:{title:'Protect the resource that unlocks the priority',body:'Start with the outcome, then identify the minimum resource needed to protect it.',tryIt:'If we protect only one resource for this priority, it should be ___ because ___.',prompt:'Which spend or allocation is essential to impact, and which is simply inherited?',evidence:'Spending has most effect when tied to a small number of instructional priorities; cost-effectiveness varies more between how money is used than how much there is.',source:'EEF Teaching and Learning Toolkit (cost-effectiveness ratings); Levin & Belfield (2015), Guiding the Development of Cost-Effectiveness in Education.',local:'Tying each grant line and PTA fundraising request to one School Improvement Plan priority makes it easier to defend and quicker to approve.'},
+  change:{title:'Do less, more consistently',body:'Identify the one behaviour that needs to become routine before adding the next layer.',tryIt:'What should be reliably happening by Friday?',prompt:'Are we asking people to understand the change, or to perform a specific new behaviour?',evidence:'Implementation quality predicts impact more than the choice of programme; sequencing a few active ingredients beats broad rollouts.',source:'EEF (2019), Putting Evidence to Work: A School’s Guide to Implementation; Fullan (2007), The New Meaning of Educational Change.',local:'Ministry initiatives arrive with fixed timelines; deciding which single behaviour to embed first keeps the rollout realistic for your staff.'},
+  data:{title:'Use data to choose, not just describe',body:'A useful data conversation ends with a decision. Focus on the few measures that actually change the next action.',tryIt:'Add: So what decision will we make differently because of this?',prompt:'Which measure actually changes our next action?',evidence:'Data use improves outcomes only when it changes instructional decisions; schools that end data meetings with a named action outperform those that only review results.',source:'Schildkamp (2019), Educational Research; Hamilton et al. (2009), IES practice guide on using student achievement data.',local:'Use termly assessments alongside SEA, CSEC and CAPE results to decide next steps, not only to complete the reporting cycle.'},
+  other:{title:'Turn a broad concern into the next useful question',body:'Define what is happening, who it affects and what decision or support would move it forward.',tryIt:'I’m noticing ___; it matters because ___; the next thing I need is ___.',prompt:'What would make this concern more actionable by the end of the week?',evidence:'Improvement science starts with a precise problem definition; teams that spend time defining the problem choose better interventions and abandon fewer.',source:'Bryk, Gomez, Grunow & LeMahieu (2015), Learning to Improve.',local:'If the concern involves another agency, note which one — SSSD, the Children’s Authority, a school board or the Ministry district office — so support can be routed.'},
+};
+const AI_SYSTEM = `You are an experienced school-leadership coach working with principals in Trinidad and Tobago. You know the system well: the Ministry of Education and its district offices, the SEA, CSEC and CAPE cycles, the Teaching Service Commission, the Student Support Services Division (SSSD), the Children’s Authority, denominational school boards under the Concordat, PTAs, and the day-to-day realities of primary and secondary schools.
+
+Your job: adapt a 60-second leadership idea so it fits THIS principal’s situation, using their note as the anchor.
+
+Rules for accuracy:
+1. Use ONLY the grounding material supplied (evidence, source, T&T context, checklist, related idea) plus the principal’s own words. Do not introduce new statistics, percentages, studies, laws, policy names, programme names, phone numbers, links or named people.
+2. Refer to T&T institutions only when they are relevant to the note and only those listed above. Do not invent Ministry circulars, deadlines or procedures.
+3. Be practical: the "tryIt" must be one specific action a principal can complete today with the people and time they actually have. Prefer conversations, short checks and small redeployments over new programmes or spending.
+4. Mirror the principal’s note: name the concrete situation they described (people, timing, constraint). If the note mentions a specific group or event, build the action around it.
+5. Safeguarding or child-protection concerns are never handled here — if the note raises one, set tailored:false with the reason "follow your school’s child-protection protocol and contact the Children’s Authority".
+6. If the note is empty or too vague to tailor meaningfully, do NOT pad or guess: return {"tailored": false, "reason": "<one short sentence saying what context would help>"}.
+7. Plain, warm, professional English. No jargon, no hype, no exclamation marks.
+
+Output: ONLY a JSON object, no markdown or preamble, with keys: title (max 7 words), body (max 45 words), tryIt (max 35 words), prompt (one reflective question, max 20 words), grounding (max 25 words: which part of the supplied evidence or T&T context this draws on, in plain words). Include "tailored": true.`;
+
+const MORE = {
+  workload:{resource:{title:'Stop / Delegate / Protect planner',lines:['Stop: one task we will pause for a fortnight is ___','Delegate: one task, one named person, one check-in date','Protect: one 90-minute leadership block, in the diary']},checklist:['List every recurring demand on the leadership team this half-term','Mark each as essential, habitual or inherited','Pause one habitual demand and tell staff why','Delegate one task with a clear check-in date','Block protected leadership time before Friday'],idea:{title:'Run a quiet week',body:'Cancel one standing meeting and replace it with a short written update. Notice what, if anything, breaks. Most of the time nothing does — and you have found a demand that can stay paused.'},peer:'Other Bloom schools have found value in naming one pause per half-term openly with staff, so the relief is shared rather than private. Ask the central team for the anonymised approaches that have travelled well.'},
+  staffing:{resource:{title:'Capacity constraint map',lines:['Vacancy · Capability · Time · Deployment — which one is really binding?','The smallest useful change this week is ___','Who needs to agree it, and by when?']},checklist:['Name the constraint: vacancy, capability, time or deployment','List where goodwill is currently covering the gap','Identify one deployment change that costs nothing','Agree a fortnight trial with the people affected','Set a date to review whether it eased pressure'],idea:{title:'Swap before you add',body:'Before requesting cover, look for one duty that could move to a different time or role. Small redeployments often release more capacity than a new post would, and they can start this week.'},peer:'Across the network, timetable-level redeployment trials have been shared more often than recruitment fixes. Ask the central team for the practice notes.'},
+  teaching:{resource:{title:'One observable improvement card',lines:['This week we want to see more ___','because ___','We will look for it in: classrooms · books · pupil talk']},checklist:['Choose one classroom behaviour to see more of','Describe what it looks like in one sentence','Share it with staff as a focus, not a judgement','Look for it in three short drop-ins','Feed back on what you noticed, not what was missing'],idea:{title:'Ask pupils first',body:'Spend ten minutes asking six pupils what helped them learn this week. Their answers often point to the one behaviour worth amplifying — and they are quicker than an observation cycle.'},peer:'Several Bloom schools frame improvement as a single observable focus per half-term. Ask the central team which framings have been shared.'},
+  behaviour:{resource:{title:'Incident pattern sheet',lines:['Last five significant incidents: time · place · group · trigger','Circle anything that repeats','One predictable situation to redesign: ___']},checklist:['Pull the last five significant incidents','Log time, location, pupil group and trigger for each','Circle any factor that repeats','Pick one predictable situation to change','Brief the adults on duty at that point'],idea:{title:'Fix the transition, not the child',body:'Most avoidable incidents cluster around transitions. Change one routine — line-up, corridor, entry to lessons — and watch the numbers before changing anything else.'},peer:'Network conversations have focused on transition routines and duty positioning rather than sanction changes. Ask the central team for anonymised practice notes.'},
+  attendance:{resource:{title:'Five pupils, one action',lines:['Five pupils where one action this week could shift the pattern','For each: what is really driving the absence?','Who makes the first contact, and when?']},checklist:['Segment: who is driving the whole-school figure?','Choose five pupils where one action could help','Name the likely cause for each, not the symptom','Agree one supportive contact per pupil this week','Review on Friday: what changed, what didn’t'],idea:{title:'Call on the good day',body:'Ring home on a day the pupil attended, not the day they didn’t. It changes the tone of every later conversation and builds the relationship you will need.'},peer:'Bloom schools have shared small-group approaches more than whole-school incentives. Ask the central team for the practice summary.'},
+  safeguarding:{resource:{title:'Notice · Record · Escalate reminder',lines:['Notice: what should every adult be alert to this term?','Record: where, how quickly, in how much detail?','Escalate: to whom — and what if they are unavailable?']},checklist:['Ask three colleagues to explain the reporting route','Note any hesitation or difference between answers','Check the out-of-hours and cover arrangements','Reissue a one-page reminder, not a full retrain','Log the check in your safeguarding record'],idea:{title:'The two-minute briefing',body:'Open one staff briefing with a single scenario: “A pupil tells you… what do you do first?” Hearing answers aloud surfaces gaps quickly and safely.'},peer:'Practice shared across Bloom centres on short scenario briefings and clarity of the deputy route. Nothing here replaces your statutory procedures.'},
+  parents:{resource:{title:'Conversation frame',lines:['Emotion heard: ___','Issue to solve: ___','Boundary to hold: ___ · Next step, agreed: ___']},checklist:['Identify the solvable issue beneath the heat','Decide the boundary you will hold before the meeting','Open by acknowledging what they feel','Agree one next step and who owns it','Follow up in writing within two days'],idea:{title:'Reply with a question',body:'When a message arrives hot, respond with one genuine question about what they need rather than a full explanation. It slows the exchange and shows you are listening.'},peer:'Bloom schools have shared meeting structures and follow-up templates for difficult conversations. Ask the central team for anonymised examples.'},
+  send:{resource:{title:'Plan-to-practice check',lines:['The single adjustment every adult must remember is ___','Who has not yet heard it?','How will we know it is happening?']},checklist:['Pick one pupil where plan and practice differ','Name the adjustment that most changes access','List every adult who works with that pupil','Check each one can state the adjustment','Fix the gap before adding anything new'],idea:{title:'One adjustment, on the door',body:'Reduce a plan to a single line each adult can hold in their head. Consistency of one thing beats partial delivery of ten.'},peer:'Network practice has centred on simplifying plans to a small number of reliably delivered adjustments. Ask the central team for shared formats.'},
+  culture:{resource:{title:'Norm-setting sentence',lines:['At Bloom, when ___ happens,','we want leaders to consistently ___,','because ___']},checklist:['Name one norm you want to strengthen','Describe the behaviour that shows it','Notice and name it publicly three times this week','Identify one thing currently tolerated that undermines it','Address that one thing directly'],idea:{title:'Audit what gets celebrated',body:'List the last five things praised publicly. Do they match the culture you say you want? Choose the next five deliberately.'},peer:'Bloom leaders have shared how they make norms explicit in briefings and appraisal. Ask the central team for practice notes.'},
+  confidence:{resource:{title:'Rehearsal plan',lines:['The skill staff need to practise, not just hear: ___','A 10-minute safe rehearsal: ___','Immediate feedback from: ___']},checklist:['Name the specific action staff feel unsure about','Design a 10-minute low-stakes rehearsal','Pair colleagues for practice, not observation','Give immediate, specific feedback','Repeat once before the skill is needed live'],idea:{title:'Model it imperfectly first',body:'Demonstrate the skill imperfectly and invite improvement. It lowers the stakes and shows that competence is built, not assumed.'},peer:'Rehearsal-based development has come up across Bloom more often than information sessions. Ask the central team for anonymised examples.'},
+  resources:{resource:{title:'Protect-one-resource sheet',lines:['The priority outcome is ___','The one resource that unlocks it is ___','What we will stop funding or allocating to protect it: ___']},checklist:['State the priority outcome in one line','List every resource currently attached to it','Mark each as essential or inherited','Protect the one that most unlocks impact','Release or repurpose one inherited allocation'],idea:{title:'Zero-base one line',body:'Take one budget line and ask what you would fund if it started from nothing today. Usually one legacy cost surfaces that no longer serves the priority.'},peer:'Bloom schools have shared prioritisation frames rather than figures. Ask the central team what has worked.'},
+  change:{resource:{title:'By-Friday routine card',lines:['The one behaviour that must become routine: ___','What should reliably be happening by Friday?','How we will check, lightly: ___']},checklist:['Identify the single behaviour the change depends on','Remove one competing demand','Make it easy: template, time, reminder','Check lightly on Friday — is it happening?','Only then add the next layer'],idea:{title:'Shrink the change',body:'If adoption is patchy, halve the ask. A smaller change done everywhere beats a fuller change done in pockets.'},peer:'Implementation conversations across Bloom have focused on sequencing and doing less. Ask the central team for anonymised approaches.'},
+  data:{resource:{title:'So-what decision line',lines:['The measure: ___','What it is telling us: ___','So the decision we will make differently is ___']},checklist:['Pick the one measure that changes your next action','Drop or park measures that only describe','Frame the data conversation as a decision to make','End the meeting with the decision written down','Check next week whether the action happened'],idea:{title:'The last-slide rule',body:'Every data discussion ends with one line: the decision, the owner, the date. If it can’t be filled in, the data wasn’t needed.'},peer:'Bloom leaders have shared meeting structures that end in decisions rather than descriptions. Ask the central team for examples.'},
+  other:{resource:{title:'Make it actionable',lines:['I’m noticing ___','It matters because ___','The next thing I need is ___']},checklist:['Write what is happening in one sentence','Name who it affects most','Identify the decision or support that would move it','Decide who else needs to know','Set a date to revisit it'],idea:{title:'Talk to one person',body:'Choose the colleague most affected and ask what they think the next useful step is. Broad concerns narrow quickly in conversation.'},peer:'Concerns filed under “something else” reach the central team as themes only. Ask them whether others have raised something similar.'},
+};
+
+// Demo seeds (PAST / CURRENT) were removed with the localStorage layer: Step 2 is now fed
+// entirely by the network_pulse() RPC, and schools/perks are read from the database.
+
+const ACTIONS = [
+  {id:'resource', title:'I need a resource', sub:'Get a ready-to-use template or prompt', icon:'M6 3h9l5 5v13H6zM15 3v5h5M9 13h6M9 17h6'},
+  {id:'tool', title:'Give me a practical tool', sub:'A checklist you can use this week', icon:'M5 5h14v14H5zM8 12l3 3 5-6'},
+  {id:'idea', title:'Show me another idea', sub:'A second 60-second strategy', icon:'M9 18h6M10 21h4M12 3a6 6 0 0 1 4 10.5c-.7.6-1 1.3-1 2.5H9c0-1.2-.3-1.9-1-2.5A6 6 0 0 1 12 3z'},
+  {id:'peer', title:'How are other Bloom schools tackling this?', sub:'Share approaches without naming sensitive responses', icon:'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M22 20a6 6 0 0 0-6-6'},
+  {id:'talk', title:'I’d like to talk this through', sub:'Prepare a short conversation request', icon:'M4 5h16v11H9l-5 4z'},
+  {id:'central', title:'I need central-team support', sub:'Advice · conversation · practical help · urgent', icon:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6'},
+];
+// Lucide icon names (with fallbacks across versions); hand-drawn paths above are used only if Lucide fails to load.
+const LUCIDE = {
+  workload:['HeartPulse','Heart'], staffing:['Users'], teaching:['BookOpen'], behaviour:['Target'], attendance:['CalendarCheck','CalendarCheck2'],
+  safeguarding:['ShieldCheck'], parents:['Handshake','HeartHandshake'], send:['Puzzle'], culture:['Flag'], confidence:['Sparkles'],
+  resources:['Coins'], change:['RefreshCw'], data:['ChartColumn','BarChart3'], other:['Ellipsis','MoreHorizontal'],
+  resource:['FileText'], tool:['ClipboardCheck'], idea:['Lightbulb'], peer:['Users'], talk:['MessageCircle'], central:['LifeBuoy'],
+  lock:['Lock'], check:['Check'], clock:['Clock'], chevron:['ChevronRight'], close:['X'],
+  book:['BookMarked','BookOpen'], pin:['MapPin'], phone:['Phone'], chevronDown:['ChevronDown'], file:['FileDown','FileText'], share:['Share2','Share'], heart:['HeartHandshake','Heart'], settings:['Settings2','Settings'], bot:['Bot'], external:['ExternalLink'], sparkle:['Sparkles'], flame:['Flame'], award:['Award'], star:['Star'], users:['Users'], pen:['PenLine','Pencil'],
+};
+function lucideNode(names) {
+  const L = window.lucide; if (!L || !L.icons) return null;
+  for (const n of names) {
+    const node = L.icons[n];
+    if (!node) continue;
+    if (Array.isArray(node) && node[0] === 'svg') return node[2];
+    if (Array.isArray(node)) return node;
+    if (node && node.node) return node.node;
+  }
+  return null;
+}
+function icon(key, { size = 20, color = '#1E3A78', sw = 1.75, fallback = '' } = {}) {
+  const kids = lucideNode(LUCIDE[key] || []);
+  const children = kids ? kids.map(([tag, attrs], i) => React.createElement(tag, { key: i, ...attrs })) : React.createElement('path', { d: fallback });
+  return React.createElement('svg', { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:color, strokeWidth:sw, strokeLinecap:'round', strokeLinejoin:'round', 'aria-hidden':true, style:{ flex:'none' } }, children);
+}
+const SUPPORT_TYPES = [{id:'advice',label:'Advice'},{id:'conversation',label:'Conversation'},{id:'practical_help',label:'Practical help'},{id:'urgent',label:'Urgent'}];
+const SEL = `2px solid ${GREEN}`, UNSEL = `1.5px solid ${BORDER}`;
+
+// ---- shape helpers for the Supabase payloads --------------------------------
+// network_pulse() returns counts only, with every cell below the minimum of 2 already
+// removed server-side. These turn that payload back into the {topic: count} maps the
+// hot / rising / persistent maths below already expects.
+function countMap(rows) { const m = {}; (rows || []).forEach(r => { m[r.topic] = r.count; }); return m; }
+function seriesMap(rows, i) { const m = {}; (rows || []).forEach(r => { const v = (r.counts || [])[i] || 0; if (v) m[r.topic] = v; }); return m; }
+function mapShared(r) { return { id:r.id, key:`${r.topic}|${r.title}`, topic:r.topic, title:r.title, tryIt:r.try_it, text:r.text, atISO:r.created_at }; }
+function mapRequest(r) { return { id:r.id, ref:r.ref, schoolId:r.school_id, type:r.type, topic:r.topic, impact:r.impact, context:r.context, help:r.help, status:r.status, atISO:r.created_at }; }
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+class Component extends DCLogic {
+  sheetRef = React.createRef();
+  state = { showMore:false, screen:1, topic:null, impact:null, note:'', saved:false, skipped:false, justSaved:false, sheet:null, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, cRef:'', copied:false, ai:{ key:null, status:'idle', data:null, error:'' }, redeemed:{}, perkId:null,
+    // Session + server state. `schoolId` now comes from profiles.school_id, not localStorage.
+    authStatus:'loading', email:'', authError:'', session:null, profile:null, schoolId:null,
+    schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
+    submitting:false, submitError:'', cSending:false };
+
+  // bloom-pulse-shared -> shared_resources (per school, RLS-scoped).
+  async addShared(item) {
+    const s = this.state; if (!s.schoolId || !s.session) return;
+    this.setState({ shared: [{ ...item, id:null }, ...(s.shared || [])].slice(0, 20) });   // optimistic
+    try { await BloomAPI.addShared({ schoolId:s.schoolId, userId:s.session.user.id, topic:item.topic, title:item.title, tryIt:item.tryIt, text:item.text }); } catch (e) {}
+    this.refreshShared();
+  }
+  async removeShared(id) {
+    this.setState({ shared: (this.state.shared || []).filter(x => x.id !== id) });
+    if (!id) return;
+    try { await BloomAPI.removeShared(id); } catch (e) {}
+    this.refreshShared();
+  }
+  async shareNative(text, title) {
+    if (navigator.share) { try { await navigator.share({ title, text }); this.setState({ shareStatus:'shared' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(text); this.setState({ shareStatus:'copied' }); } catch (e) { this.setState({ shareStatus:'copied' }); }
+    setTimeout(() => this.setState({ shareStatus:'' }), 2200);
+  }
+  esc(v) { return String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  printHot(d) {
+    const e = this.esc.bind(this);
+    const N = d.schoolsTotal || 5;
+    const row = (label, n, sub) => `<tr><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;font-size:12pt;">${e(label)}<div style="font-size:9.5pt;color:#666A80;margin-top:2px;">${e(sub)}</div></td><td style="padding:10px 0;border-bottom:1px solid #E6E2EB;width:46%;"><div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:9px;background:#F0ECF6;border-radius:5px;overflow:hidden;"><div style="width:${n/N*100}%;height:100%;background:#1E3A78;"></div></div><span style="font-size:12pt;font-weight:600;min-width:34px;text-align:right;">${n}/${N}</span></div></td></tr>`;
+    const trendRows = d.trends.map(t => `<tr><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;">${e(t.label)}</td><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;color:#454A68;text-align:center;">${e(t.countsLabel)}</td><td style="padding:8px 0;border-bottom:1px solid #E6E2EB;font-size:11pt;text-align:right;">${e(t.tag)} ${e(t.arrow)}</td></tr>`).join('');
+    const chips = (items, fmt) => items.length ? items.map(fmt).map(x => `<span style="display:inline-block;padding:5px 11px;border:1px solid #D8D2E4;border-radius:999px;font-size:10.5pt;margin:0 6px 6px 0;">${x}</span>`).join('') : '<span style="font-size:10.5pt;color:#666A80;">None this week</span>';
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bloom network pulse — ${e(d.weekLabel)}</title><style>@page{size:letter;margin:18mm}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#14224A;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1,h2{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500}table{width:100%;border-collapse:collapse}</style></head><body>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #14224A;padding-bottom:12px;"><div><div style="font-size:10pt;letter-spacing:.06em;text-transform:uppercase;color:#1E3A78;font-weight:600;">Bloom network pulse</div><h1 style="margin:6px 0 0;font-size:24pt;line-height:1.1;">What’s hot across Bloom</h1></div><div style="text-align:right;font-size:10.5pt;color:#666A80;">${e(d.weekLabel)}<br>${e(d.includedLabel)}</div></div>
+<h2 style="font-size:15pt;margin:22px 0 4px;">${e(d.hotHeading)}</h2><table>${d.hotItems.map(h => row(h.label, h.count, h.trendLine)).join('')}</table>
+<div style="display:flex;gap:28px;margin-top:20px;"><div style="flex:1;"><h2 style="font-size:13pt;margin:0 0 8px;">Rising</h2>${chips(d.risingItems, r => `↑ ${e(r.label)} <span style="color:#666A80;">${e(r.delta)}</span>`)}</div><div style="flex:1;"><h2 style="font-size:13pt;margin:0 0 8px;">On the radar</h2>${chips(d.radarItems, p => `${e(p.label)} <span style="color:#666A80;">${e(p.countLabel)}</span>`)}</div></div>
+<h2 style="font-size:15pt;margin:24px 0 4px;">Last 4 weeks</h2><table><tr><th style="text-align:left;font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Theme</th><th style="font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Schools per week (oldest → this week)</th><th style="text-align:right;font-size:9.5pt;color:#666A80;font-weight:600;padding-bottom:6px;">Status</th></tr>${trendRows}</table>
+<p style="font-size:9.5pt;color:#666A80;line-height:1.5;margin:14px 0 0;">${d.suppressed ? `${d.suppressed} further theme${d.suppressed === 1 ? '' : 's'} not shown to protect privacy. ` : ''}Hot = 3+ of ${N} schools this week · Rising = more selections than last week · Persistent = appears in 3+ of the last 4 weeks.</p>
+<div style="margin-top:26px;padding:12px 14px;background:#F0ECF6;border-radius:8px;font-size:10pt;line-height:1.5;"><strong>Aggregated across ${N} Bloom schools.</strong> Individual responses, school names and principals’ notes are not included. Prepared from Bloom Principal Pulse on ${e(d.today)}. CEBM central team: +1 868-607-2326.</div>
+<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},250);});<\/script></body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) { try { navigator.clipboard.writeText(html); } catch (e) {} this.setState({ pdfBlocked:true }); setTimeout(() => this.setState({ pdfBlocked:false }), 3000); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  }
+  // window.claude.complete -> POST /functions/v1/tailor. The edge function holds the API key,
+  // enforces the 6-a-day limit, blocks safeguarding and re-runs the same output validation
+  // server-side, so the client only has to render the verdict it returns.
+  async refine(key, topic, impact, note, base, more) {
+    this.setState({ ai:{ key, status:'busy', data:null, error:'' } });
+    const fail = (error) => { if (this.state.ai.key === key) this.setState({ ai:{ key, status:'error', data:null, error } }); };
+    try {
+      const r = await BloomAPI.tailor({
+        topic: topic.id, impact: impact ? impact.id : null, note, week_start: this.weekISO(),
+        base: { label:topic.label, title:base.title, body:base.body, tryIt:base.tryIt, prompt:base.prompt, evidence:base.evidence, source:base.source, local:base.local },
+        more: { checklist:more.checklist, idea:more.idea },
+      });
+      if (this.state.ai.key !== key) return;
+      if (r && r.status === 'done' && r.data) { this.setState({ ai:{ key, status:'done', data:r.data, error:'' } }); return; }
+      if (r && r.status === 'declined') { fail(`Not enough to tailor safely: ${String(r.reason || 'add a sentence of context on step 1 and try again').replace(/[.!]+$/, '')}. The default idea still applies.`); return; }
+      if (r && r.status === 'rejected') { fail('The tailored version added claims that aren’t in the evidence, so it was discarded. The default idea still applies.'); return; }
+      fail('Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
+    } catch (e) {
+      fail(e && e.status === 429 ? 'You’ve used today’s tailoring allowance for this school. The evidence-based default is shown instead.'
+        : e && (e.message === 'offline' || e.message === 'unauthenticated') ? 'AI tailoring needs an online connection. The evidence-based default is shown instead.'
+        : 'Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
+    }
+  }
+
+  componentDidMount() {
+    this.mq = window.matchMedia('(max-width: 520px)');
+    this.onMq = () => this.setState({ narrow: this.mq.matches });
+    this.mq.addEventListener ? this.mq.addEventListener('change', this.onMq) : this.mq.addListener(this.onMq);
+    this.setState({ narrow: this.mq.matches });
+    this.onKey = (e) => { if (e.key === 'Escape' && this.state.sheet) this.setState({ sheet: null }); };
+    window.addEventListener('keydown', this.onKey);
+    // Re-render once the icon library is available.
+    if (!window.lucide) { let n = 0; this.iconPoll = setInterval(() => { if (window.lucide || ++n > 100) { clearInterval(this.iconPoll); this.forceUpdate(); } }, 100); }
+    // Session bootstrap. profiles.school_id replaces the bloom-pulse-school picker.
+    if (!window.BloomAPI || !BloomAPI.configured()) { this.setState({ authStatus:'signed_out', authError:'This build has no Supabase configuration.' }); return; }
+    BloomAPI.onAuthChange(session => this.onSession(session));
+    BloomAPI.getSession().then(session => this.onSession(session)).catch(() => this.setState({ authStatus:'signed_out' }));
+  }
+
+  // Runs on first load and on every auth state change (including the magic-link return).
+  async onSession(session) {
+    if (!session) { this.setState({ session:null, profile:null, schoolId:null, authStatus: this.state.authStatus === 'sent' ? 'sent' : 'signed_out' }); return; }
+    let profile = null;
+    try { profile = await BloomAPI.loadProfile(); } catch (e) { profile = null; }
+    // Allow-list: a session with no profiles row is not a pilot user, so drop it.
+    if (!profile) {
+      await BloomAPI.signOut();
+      this.setState({ session:null, profile:null, schoolId:null, authStatus:'signed_out', authError:'That address is not on the Bloom pilot list. Ask the central team to add you.' });
+      return;
+    }
+    this.setState({ session, profile, schoolId: profile.school_id || null, authStatus:'signed_in', authError:'' }, () => this.loadForSchool(profile.school_id));
+  }
+
+  // Everything steps 2-4 need, read from the server for the signed-in school.
+  async loadForSchool(schoolId) {
+    if (!schoolId) return;
+    const week = this.weekISO();
+    try {
+      const [schools, perkRows] = await Promise.all([BloomAPI.listSchools(), BloomAPI.listPerks()]);
+      this.setState({ schools, perkRows });
+    } catch (e) {}
+    try {
+      const mine = await BloomAPI.myPulse(week);
+      if (mine) {
+        this.setState({ topic:mine.topic, impact:mine.impact, note:mine.note || '', saved:true, skipped:false, screen: this.state.screen === 1 ? 2 : this.state.screen });
+      } else {
+        // No pulse yet this week: fall back to the device-local draft (drafts stay local by design).
+        const d = JSON.parse(localStorage.getItem('bloom-pulse-draft:' + schoolId) || 'null');
+        if (d && d.weekStartISO === week) this.setState({ topic:d.topic || null, impact:d.impact || null, note:d.note || '' });
+      }
+    } catch (e) {}
+    this.refreshNetwork(); this.refreshRewards(); this.refreshShared(); this.refreshRequests();
+  }
+
+  // bloom-pulse-submissions -> network_pulse(). Other schools' rows never reach the client.
+  async refreshNetwork() { try { this.setState({ net: await BloomAPI.networkPulse(this.weekISO()) }); } catch (e) {} }
+
+  // bloom-pulse-rewards -> points_ledger sum + redemptions. The client never does its own maths.
+  async refreshRewards() {
+    try {
+      const [ledger, reds, history] = await Promise.all([BloomAPI.listLedger(), BloomAPI.listRedemptions(), BloomAPI.myPulseHistory(this.weeksAgoISO(12))]);
+      const redeemed = {};
+      reds.forEach(r => { redeemed[r.perk_id] = { code:r.code, atISO:r.issued_at, expiresAt:r.expires_at, usedAt:r.used_at }; });
+      this.setState({ ledger, redeemed, points: Math.max(0, ledger.reduce((a, r) => a + r.delta, 0)), streak: this.streakFrom(history) });
+    } catch (e) {}
+  }
+  async refreshShared() { try { this.setState({ shared: (await BloomAPI.listShared()).map(mapShared) }); } catch (e) {} }
+  async refreshRequests() { try { this.setState({ requests: (await BloomAPI.listRequests()).map(mapRequest) }); } catch (e) {} }
+
+  // Consecutive weeks of pulses ending this week, or last week when this one is not in yet.
+  streakFrom(rows) {
+    const have = new Set((rows || []).map(r => r.week_start));
+    const d = this.weekStart(); let n = 0;
+    if (!have.has(this.weekISO())) d.setDate(d.getDate() - 7);
+    while (have.has(d.toISOString().slice(0,10))) { n++; d.setDate(d.getDate() - 7); }
+    return n;
+  }
+  weeksAgoISO(n) { const d = this.weekStart(); d.setDate(d.getDate() - n * 7); return d.toISOString().slice(0,10); }
+  componentDidUpdate() {
+    const prev = { sheet: this._lastSheet }; this._lastSheet = this.state.sheet;
+    if (this.state.sheet && this.state.sheet !== prev.sheet) {
+      this.lastFocus = document.activeElement;
+      requestAnimationFrame(() => { const el = this.sheetRef.current; if (!el) return; const first = el.querySelector('h2') || el; first.setAttribute && first.setAttribute('tabindex','-1'); first.focus(); });
+    } else if (!this.state.sheet && prev.sheet && this.lastFocus && this.lastFocus.focus) { this.lastFocus.focus(); }
+  }
+  componentWillUnmount() { if (this.mq) (this.mq.removeEventListener ? this.mq.removeEventListener('change', this.onMq) : this.mq.removeListener(this.onMq)); clearInterval(this.iconPoll); window.removeEventListener('keydown', this.onKey); }
+  weekStart() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
+  weekISO() { return this.weekStart().toISOString().slice(0,10); }
+  persist(patch) {
+    this.setState(patch, () => { try { localStorage.setItem('bloom-pulse-draft:' + (this.state.schoolId || 'none'), JSON.stringify({ weekStartISO:this.weekISO(), topic:this.state.topic, impact:this.state.impact, note:this.state.note })); } catch (e) {} });
+  }
+
+  renderVals() {
+    const s = this.state, p = this.props;
+    const emailOk = EMAIL_RE.test((s.email || '').trim());
+    const authBusy = s.authStatus === 'loading' || s.authStatus === 'sending';
+    const routeConfigured = p.urgentRouteConfigured ?? true;
+    const week = this.weekISO();
+    // Step 2 is fed entirely by network_pulse(): server-side counts with the minimum-cell
+    // rule already applied. A theme only one school picked arrives as a count, never by name.
+    const net = s.net || {};
+    const nSchools = net.schools_total || (s.schools || []).length || 5;
+    const cur = countMap(net.current), prev = countMap(net.previous);
+    const C = [0,1,2,3].map(i => seriesMap(net.four_weeks, i));
+    // The principal's own theme is always known to them, even when suppressed for everyone else.
+    if (s.saved && s.topic) { cur[s.topic] = Math.max(cur[s.topic] || 0, 1); C[3][s.topic] = Math.max(C[3][s.topic] || 0, 1); }
+    const included = net.included || 0;
+    const suppressed = net.suppressed || 0;
+
+    const byCount = Object.keys(cur).sort((a,b) => cur[b]-cur[a] || TOPICS.findIndex(t=>t.id===a)-TOPICS.findIndex(t=>t.id===b));
+    let hotIds = byCount.filter(id => cur[id] >= 3);
+    const isHot = hotIds.length > 0;
+    if (!isHot) hotIds = byCount.slice(0, 2);
+    const hotItems = hotIds.map(id => {
+      const n = cur[id], pv = prev[id]||0;
+      const rising = n > pv;
+      return { label:T[id].label, count:n, countLabel:`${n}/${nSchools}`, pct:`${n/nSchools*100}%`,
+        trendLine: rising ? `↑ Rising · ${pv} last week` : n < pv ? `↓ Down from ${pv} last week` : `→ Same as last week`,
+        trendColor: rising ? GREEN : MUTED };
+    });
+    const risingItems = byCount.filter(id => !hotIds.includes(id) && cur[id] > (prev[id]||0)).map(id => ({ label:T[id].label, delta:`${prev[id]||0} → ${cur[id]}` }));
+    const risingIds = risingItems.map(r => TOPICS.find(t=>t.label===r.label).id);
+    const radarItems = byCount.filter(id => !hotIds.includes(id) && !risingIds.includes(id)).map(id => ({ label:T[id].label, countLabel:`${cur[id]}/${nSchools}` }));
+
+    const trends = TOPICS.map(t => {
+      const cs = C.map(c => c[t.id]||0), total = cs.reduce((a,b)=>a+b,0);
+      if (!total) return null;
+      const present = cs.filter(Boolean).length, n = cs[3], pv = cs[2];
+      const tag = present >= 3 ? 'Persistent' : n > pv ? 'Rising' : 'Tracking';
+      const arrow = n > pv ? '↑' : n < pv ? '↓' : '→';
+      return { id:t.id, label:t.label, total, n, tag, arrow, arrowColor: n > pv ? GREEN : MUTED,
+        countsLabel: cs.join(' · '), aria:`${t.label}: ${cs.join(', ')} of ${nSchools} over the last four weeks, ${tag}`,
+        bars: cs.map((v,i) => ({ h:`${4 + v*6}px`, bg: v ? (i===3 ? GREEN : '#B5A3D2') : BORDER })) };
+    }).filter(Boolean).sort((a,b) => b.n-a.n || b.total-a.total).slice(0,6).map((t,i) => ({ ...t, divider: i ? `1px solid #E6E2EB` : 'none' }));
+
+    const effTopic = s.topic || hotIds[0] || 'workload';
+    const topic = T[effTopic], baseMicro = MICRO[effTopic], more = MORE[effTopic];
+    const impact = IMPACTS.find(i => i.id === s.impact);
+    const noteTrim = s.note.trim();
+    const aiKey = `${effTopic}|${s.impact||''}|${noteTrim}`;
+    const aiMatch = s.ai.key === aiKey;
+    const aiLocked = effTopic === 'safeguarding';
+    const aiDone = !aiLocked && aiMatch && s.ai.status === 'done', aiBusy = aiMatch && s.ai.status === 'busy', aiError = !aiLocked && aiMatch && s.ai.status === 'error';
+    const micro = aiDone ? { ...baseMicro, ...s.ai.data } : baseMicro;
+    const same = cur[effTopic] || 0;
+    const s3 = { iconEl: icon(effTopic, { fallback: topic.icon }), label:topic.label, labelLower: effTopic==='send' ? topic.label : topic.label.toLowerCase(),
+      impactLabel: impact ? impact.label : 'Not shared', sameLabel: `${same} of ${nSchools} schools chose this theme` };
+
+    const note = s.note.trim();
+    const talkMessage = `Hi — I’d like to talk through ${s3.labelLower} this week. It is affecting me ${impact ? impact.phrase : 'enough to want a conversation'}. ${note ? note + ' ' : ''}Could we find a short time to think through the next best step?`;
+
+    const sheetId = s.sheet;
+    const sheet = { eyebrow:'', title:'', isResource:sheetId==='resource', isTool:sheetId==='tool', isIdea:sheetId==='idea', isPeer:sheetId==='peer', isTalk:sheetId==='talk', isCentral:sheetId==='central', isPerk:sheetId==='perk', isShare:sheetId==='share', isDemo:sheetId==='demo', lines:more.resource.lines, body:'', peerCount:`${same} of ${nSchools} principals` };
+    if (sheet.isResource) { sheet.eyebrow='Resource'; sheet.title=more.resource.title; }
+    if (sheet.isShare) { sheet.eyebrow='Share with colleagues'; sheet.title=micro.title; }
+    if (sheet.isDemo) { sheet.eyebrow='Account'; sheet.title='Your school and this demo'; }
+    const school = (s.schools || []).find(x => x.id === s.schoolId) || { id:null, name:'Bloom Academy', short_name:'Bloom' };
+    const shared = s.shared || [];
+    const shareText = `${micro.title}\n\n${micro.body}\n\nTry this today: ${micro.tryIt}\n\nPrompt: “${micro.prompt}”\n\nWhy it works: ${micro.evidence} (${micro.source})\n\n— Shared from Bloom Principal Pulse · ${topic.label}`;
+    const shareKey = `${effTopic}|${micro.title}`;
+    const shareSaved = shared.some(x => x.key === shareKey);
+    if (sheet.isTool) { sheet.eyebrow='Practical tool'; sheet.title=`${topic.label}: this week’s checklist`; }
+    if (sheet.isIdea) { sheet.eyebrow='Another 60-second idea'; sheet.title=more.idea.title; sheet.body=more.idea.body; }
+    if (sheet.isPeer) { sheet.eyebrow='Across Bloom'; sheet.title='How other schools are approaching this'; sheet.body=more.peer; }
+    if (sheet.isTalk) { sheet.eyebrow='Talk it through'; sheet.title='Your conversation request'; }
+    if (sheet.isCentral) { sheet.eyebrow='Central team'; sheet.title = s.cSent ? 'Request sent' : 'Ask for central-team support'; }
+
+    // Rewards — points are the server's sum(delta) over points_ledger; never local maths.
+    const fullNetwork = nSchools > 0 && included === nSchools;
+    const points = s.points;
+    const streak = s.streak;
+    const LEDGER_LABEL = { pulse:'this week’s pulse', note:'note shared', full_network:'full network' };
+    const earnedLines = (s.ledger || []).filter(r => r.week_start === week && r.delta > 0).map(r => `+${r.delta} ${LEDGER_LABEL[r.kind] || 'bonus'}`);
+    const badges = [
+      { key:'star', label:'First pulse', sub: streak > 0 ? 'Shared a weekly pulse' : 'Share your first weekly pulse', earned: streak > 0 },
+      { key:'flame', label:'4-week streak', sub: streak >= 4 ? 'Four Mondays running' : `${streak} of 4 Mondays so far`, earned: streak >= 4 },
+      { key:'users', label:'Full network', sub: fullNetwork ? 'All schools in' : `${included} of ${nSchools} in this week`, earned: s.saved && fullNetwork },
+      { key:'pen', label:'Note shared', sub: s.saved && noteTrim ? 'Context helps the team' : 'Add a note to your pulse', earned: s.saved && !!noteTrim },
+    ].map(b => ({ ...b, aria:`${b.label}: ${b.earned ? 'earned' : 'not yet earned'}`, bg: b.earned ? PAPER : '#F6F5F0', opacity: b.earned ? 1 : .7, iconBg: b.earned ? '#F8F3E8' : MINT, iconEl: icon(b.key, { size:18, color: b.earned ? '#8A6614' : MUTED, fallback:'M12 3l2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17l-5.5 3 1-6.1L3 9.5l6.3-.9z' }) }));
+    // Perks come from the perks table. The app stays in "Term 2 preview" until a partner signs.
+    const perkList = (s.perkRows || []).map(k => ({ id:k.id, partner:k.partner, mark:(String(k.partner || 'B').trim()[0] || 'B').toUpperCase(), offer:k.offer, detail:k.detail, cost:k.cost, terms:k.terms, active:k.active, validDays:k.valid_days }));
+    const perksPreview = !perkList.some(k => k.active);
+    const perkSel = perkList.find(k => k.id === s.perkId) || perkList[0] || { id:'', partner:'', mark:'B', offer:'', detail:'', cost:0, terms:'', active:false, validDays:90 };
+    const perkRed = s.redeemed[perkSel.id];
+    const perkCan = !perksPreview && !!perkSel.active && points >= perkSel.cost;
+    const valid = new Date(); valid.setDate(valid.getDate() + (perkSel.validDays || 90));
+    const perk = { ...perkSel, redeemed: !!perkRed, notRedeemed: !perkRed, code: perkRed ? perkRed.code : '', redeemedOn: perkRed ? new Date(perkRed.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }) : '',
+      validUntil: new Date(perkRed && perkRed.expiresAt ? perkRed.expiresAt : valid).toLocaleDateString('en-TT', { day:'numeric', month:'short', year:'numeric' }),
+      costLabel:`${perkSel.cost} points`, cantAfford: !perkCan, confirming: !!s.confirmRedeem, btnBg: perkCan ? GREEN : '#D8D2E4', btnFg: perkCan ? PAPER : '#5A5E74', btnLabel: perksPreview ? 'Redemption opens in Term 2' : !perkCan ? `Need ${perkSel.cost - points} more points` : s.confirmRedeem ? 'Confirm redemption' : `Redeem for ${perkSel.cost} points` };
+    if (sheet.isPerk) { sheet.eyebrow = perkRed ? 'Redeemed perk' : perksPreview ? 'Partner perk · preview' : 'Partner perk'; sheet.title = perkRed ? 'Your code is ready' : perkSel.offer; }
+
+    const checked = Object.values(s.checks).filter(Boolean).length;
+    const checklist = more.checklist.map((text,i) => { const on = !!s.checks[i]; return { n:`${i+1}.`, text, checked:on,
+      toggle: () => this.setState(st => ({ checks:{ ...st.checks, [i]: !st.checks[i] } })),
+      border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, boxBorder: on ? GREEN : BORDER, boxBg: on ? GREEN : PAPER, deco: on ? 'line-through' : 'none', color: on ? MUTED : INK }; });
+
+    const showUrgentNotice = s.cType === 'urgent' || effTopic === 'safeguarding';
+    const canSubmit = !!(s.topic && s.impact);
+    const wd = this.weekStart();
+    const wl = `Week of ${wd.getDate()} ${wd.toLocaleString('en-GB',{month:'short'})}`;
+
+    const narrow = !!s.narrow;
+    // Most-chosen topics across the last 4 weeks come first; a saved/drafted topic is always visible.
+    const totals = {}; C.forEach(c => Object.keys(c).forEach(k => { totals[k] = (totals[k]||0) + c[k]; }));
+    const ranked = TOPICS.map((t,i) => ({ t, score: (totals[t.id]||0)*100 - i })).sort((a,b) => b.score - a.score).map(x => x.t);
+    let primaryIds = ranked.slice(0,6).map(t => t.id);
+    if (s.topic && !primaryIds.includes(s.topic)) primaryIds = [...primaryIds.slice(0,5), s.topic];
+    const orderedPrimary = TOPICS.filter(t => primaryIds.includes(t.id));
+    const mkCard = t => { const on = s.topic===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, iconEl: icon(t.id, { color: on ? GREEN : MUTED, fallback: t.icon }), select: () => this.persist({ topic:t.id }) }; };
+    const cardsSplit = { primary: orderedPrimary.map(mkCard), more: TOPICS.filter(t => !primaryIds.includes(t.id)).map(mkCard) };
+    return {
+      shellName: narrow ? 'BloomShell' : 'IOSDevice',
+      padTop: narrow ? 'calc(env(safe-area-inset-top, 0px) + 14px)' : '58px',
+      padBottom: narrow ? 'calc(env(safe-area-inset-bottom, 0px) + 14px)' : '42px',
+      sheetPadBottom: narrow ? 'calc(env(safe-area-inset-bottom, 0px) + 20px)' : '48px',
+      ic: { lock: icon('lock',{size:18,fallback:'M6 11h12v10H6zM9 11V7a3 3 0 0 1 6 0v4'}), check: icon('check',{size:16,sw:2.2,fallback:'M5 12l4 4 10-10'}), clock: icon('clock',{size:14,sw:2,color:'#8A6614',fallback:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8v4l3 2'}), chevron: icon('chevron',{size:18,color:'#666A80',fallback:'M9 18l6-6-6-6'}), close: icon('close',{size:20,color:'#14224A',sw:2,fallback:'M18 6L6 18M6 6l12 12'}), tickSmall: icon('check',{size:14,color:'#FFFEF9',sw:3,fallback:'M5 12l4 4 10-10'}), tickLarge: icon('check',{size:22,color:'#FFFEF9',sw:2.5,fallback:'M5 12l4 4 10-10'}),
+        phone: icon('phone',{size:18,color:'#1E3A78',fallback:'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'}), settings: icon('settings',{size:20,color:'#14224A',fallback:'M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4'}), bot: icon('bot',{size:20,fallback:'M12 4v4M8 8h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3zM9 13h.01M15 13h.01'}), external: icon('external',{size:18,color:'#666A80',fallback:'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'}), externalLight: icon('external',{size:18,color:'#C9B8E6',fallback:'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'}), heart: icon('heart',{size:18,color:'#1E3A78',fallback:'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z'}), phoneLg: icon('phone',{size:18,color:'#1E3A78',fallback:'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'}),
+        book: icon('book',{size:14,sw:2,fallback:'M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zM4 5v16'}), clockGold: icon('clock',{size:18,sw:2,color:'#8A6614',fallback:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8v4l3 2'}), file: icon('file',{size:18,fallback:'M6 3h9l5 5v13H6zM15 3v5h5M12 11v6M9 14l3 3 3-3'}), share: icon('share',{size:16,sw:2,fallback:'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4'}), chevronDown: icon('chevronDown',{size:16,color:'#1E3A78',sw:2,fallback:'M6 9l6 6 6-6'}), pin: icon('pin',{size:16,color:'#1E3A78',fallback:'M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'}), sparkle: icon('sparkle',{size:14,sw:2,fallback:'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z'}), flame: icon('flame',{size:16,color:'#D9B44A',sw:2,fallback:'M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4 0-6 1-9z'}) },
+      screen:s.screen, isS1:s.screen===1, isS2:s.screen===2, isS3:s.screen===3, isS4:s.screen===4,
+      weekLabel: wl, stepLabel:`Step ${s.screen} of 4`,
+      steps:[1,2,3,4].map(i => ({ bg: i <= s.screen ? GREEN : BORDER })),
+      sheetRef: this.sheetRef,
+      trapFocus: (e) => {
+        if (e.key !== 'Tab') return;
+        const el = this.sheetRef.current; if (!el) return;
+        const f = [...el.querySelectorAll('button,[href],textarea,input,[tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length-1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === el)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      },
+      showMore: s.showMore, showMoreButton: !s.showMore, moreLabel: `Show ${TOPICS.length - 6} more areas`,
+      toggleMore: () => this.setState({ showMore: true }),
+      topicCards: TOPICS.map(t => { const on = s.topic===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, iconEl: icon(t.id, { color: on ? GREEN : MUTED, fallback: t.icon }), select: () => this.persist({ topic:t.id }) }; }),
+      primaryCards: cardsSplit.primary, moreCards: cardsSplit.more,
+      impactOptions: IMPACTS.map(o => { const on = s.impact===o.id; return { ...o, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, select: () => this.persist({ impact:o.id }) }; }),
+      note:s.note, noteCount:s.note.length, setNote: e => this.persist({ note:e.target.value.slice(0,240) }),
+      submitDisabled: !canSubmit || s.submitting, submitBg: canSubmit && !s.submitting ? GREEN : '#D8D2E4', submitFg: canSubmit && !s.submitting ? PAPER : '#5A5E74',
+      submitLabel: s.submitting ? 'Saving…' : s.saved ? 'Update pulse' : 'Submit pulse',
+      submitHint: s.submitError ? s.submitError : canSubmit ? '' : !s.topic ? 'Choose one area to continue' : 'Add how much it’s affecting you',
+      showSubmitHint: !canSubmit || !!s.submitError,
+      talkMailto: `mailto:?subject=${encodeURIComponent('A short conversation this week')}&body=${encodeURIComponent(talkMessage)}`,
+      // bloom-pulse-submissions -> pulses upsert. Points are awarded by the insert trigger.
+      submit: async () => { if (!canSubmit || s.submitting || !s.session) return;
+        this.setState({ submitting:true, submitError:'' });
+        try {
+          await BloomAPI.upsertPulse({ schoolId:s.schoolId, weekStart:week, topic:s.topic, impact:s.impact, note:s.note, userId:s.session.user.id });
+          this.setState({ saved:true, skipped:false, justSaved:true, screen:2, submitting:false }, () => {
+            setTimeout(() => this.setState({ justSaved:false }), 3500);
+            this.refreshNetwork(); this.refreshRewards();
+          });
+        } catch (e) { this.setState({ submitting:false, submitError:'Couldn’t save your pulse. Check your connection and try again.' }); }
+      },
+      skip: () => this.setState({ skipped:true, saved:false, justSaved:false, screen:2 }),
+      savedMsg: 'Pulse saved for this week — thank you.',
+      justSaved:s.justSaved, skipped:s.skipped,
+      includedLabel:`${included} of ${nSchools} principal pulses included`,
+      includedDots: Array.from({ length: nSchools }, (_, i) => ({ bg: i < included ? GREEN : BORDER })),
+      hasSuppressed: suppressed > 0,
+      suppressedLabel: `${suppressed} further ${suppressed === 1 ? 'theme' : 'themes'} not shown to protect privacy.`,
+      hotHeading: isHot ? 'Hot now' : 'Top signal', hotItems,
+      hasRising: risingItems.length>0, risingItems, hasRadar: radarItems.length>0, radarItems, trends,
+      sharePdf: () => this.printHot({ weekLabel: wl, schoolsTotal: nSchools, suppressed, includedLabel:`${included} of ${nSchools} principal pulses included`, hotHeading: isHot ? 'Hot now' : 'Top signal', hotItems, risingItems, radarItems, trends, today: new Date().toLocaleDateString('en-TT', { day:'numeric', month:'long', year:'numeric' }) }),
+      pdfBlocked: !!s.pdfBlocked,
+      openShare: () => this.setState({ sheet:'share', shareStatus:'' }),
+      shareText, shareBtnLabel: s.shareStatus === 'shared' ? 'Shared' : s.shareStatus === 'copied' ? 'Copied to clipboard' : 'Share',
+      doShare: () => this.shareNative(shareText, `Bloom: ${micro.title}`),
+      shareMailto: `mailto:?subject=${encodeURIComponent(`A 60-second idea: ${micro.title}`)}&body=${encodeURIComponent(shareText)}`,
+      shareSaved, shareSavedTitle: shareSaved ? 'Saved to your resources' : 'Keep this for later',
+      shareSavedSub: shareSaved ? 'Find it under “I need a resource”.' : 'Adds it to “I need a resource” so your team can reuse it.',
+      shareSaveLabel: shareSaved ? 'Added' : 'Add to resources', shareSaveBg: shareSaved ? '#D8D2E4' : GREEN, shareSaveFg: shareSaved ? '#5A5E74' : PAPER,
+      addToResources: () => { if (shareSaved) return; this.addShared({ key:shareKey, topic:effTopic, title:micro.title, tryIt:micro.tryIt, text:shareText, atISO:new Date().toISOString() }); },
+      hasShared: shared.length > 0, sharedCount: shared.length,
+      sharedItems: shared.map(x => ({ ...x, topicLabel: (T[x.topic] || T.other).label, dateLabel: new Date(x.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }),
+        reshare: () => this.shareNative(x.text, `Bloom: ${x.title}`), remove: () => this.removeShared(x.id) })),
+      editLabel: s.skipped ? 'Share my pulse instead' : 'Edit my pulse',
+      toS1: () => this.setState({ screen:1 }), toS2: () => this.setState({ screen:2 }), toS3: () => this.setState({ screen:3 }), toS4: () => this.setState({ screen:4 }),
+      s3, micro,
+      aiBorder: aiDone ? GREEN : BORDER, aiDone, aiBusy, aiError, aiErrorText: s.ai.error, aiLocked, aiUnlocked: !aiLocked,
+      evidenceOpen: !!s.evidenceOpen, evidenceClosed: !s.evidenceOpen, evidenceToggleLabel: s.evidenceOpen ? 'Hide' : 'Show evidence', evidenceChevron: s.evidenceOpen ? 'rotate(180deg)' : 'none',
+      toggleEvidence: () => this.setState(st => ({ evidenceOpen: !st.evidenceOpen })),
+      aiHint: aiLocked ? 'Safeguarding ideas are not rewritten by AI.' : aiDone ? 'The idea above now reflects your theme, impact and note.' : noteTrim ? 'Rewrites the idea around your note, using only the evidence and T&T context shown above — no new claims.' : 'Works best with a note. Add a sentence on step 1 about what’s actually happening; without it the AI will decline rather than guess.',
+      aiBtnBg: aiBusy ? '#5A6A9A' : GREEN, aiBtnFg: PAPER,
+      aiBtnLabel: aiBusy ? 'Tailoring…' : aiDone ? 'Tailor again' : aiError ? 'Try again' : 'Tailor this idea',
+      aiRefine: () => { if (aiBusy || aiLocked) return; this.refine(aiKey, topic, impact, noteTrim, baseMicro, more); },
+      aiGrounding: aiDone ? (s.ai.data.grounding || baseMicro.source) : '',
+      aiReset: () => this.setState({ ai:{ key:null, status:'idle', data:null, error:'' } }),
+      perksCta: s.saved ? 'See my points & perks' : 'See perks',
+      actions: ACTIONS.map(a => ({ ...a, sub: a.id === 'resource' && shared.length ? `Templates plus ${shared.length} shared ${shared.length === 1 ? 'idea' : 'ideas'}` : a.sub, bg: a.id==='central' ? WARM : PAPER, iconBg: a.id==='central' ? '#FFFEF9' : MINT, iconEl: icon(a.id, { fallback: a.icon }),
+        open: () => this.setState({ sheet:a.id, copied:false, cContext: this.state.cContext || note }) })),
+      sheetOpen: !!sheetId, sheet, closeSheet: () => this.setState({ sheet:null, confirmRedeem:false }),
+      checklist, checkedLabel: `${checked} of 5 done`,
+      talkMessage, copyLabel: s.copied ? 'Copied' : 'Copy message',
+      copyTalk: () => { try { navigator.clipboard.writeText(talkMessage); } catch(e){} this.setState({ copied:true }); setTimeout(() => this.setState({ copied:false }), 2000); },
+      openCentralFromTalk: () => this.setState({ sheet:'central', cType:'conversation', cContext: this.state.cContext || note }),
+      supportTypes: SUPPORT_TYPES.map(t => { const on = s.cType===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, select: () => this.setState({ cType:t.id }) }; }),
+      showUrgentNotice, urgentRouteText: routeConfigured ? 'For urgent concerns, call the CEBM central team now on +1 868-607-2326 (Mon–Fri, 8am–4pm). Lifeline: (800) 5588, available 24/7 for free, confidential emotional support. For child-protection concerns call the Children’s Authority on 996, and call 999 if anyone is at immediate risk.' : 'If anyone is at immediate risk, call emergency services and follow your school’s safeguarding procedure.',
+      cContext:s.cContext, setCContext: e => this.setState({ cContext:e.target.value.slice(0,300) }),
+      cHelp:s.cHelp, setCHelp: e => this.setState({ cHelp:e.target.value.slice(0,300) }),
+      centralNotSent:!s.cSent, cSent:s.cSent, centralDisabled: !s.cType || s.cSending, centralBg: s.cType && !s.cSending ? GREEN : '#D8D2E4', centralFg: s.cType && !s.cSending ? PAPER : '#5A5E74',
+      cTypeLabel: (SUPPORT_TYPES.find(t => t.id===s.cType)||{label:''}).label.toLowerCase(), cRef:s.cRef,
+      // bloom-pulse-requests -> support_requests. Only the context the principal chose to
+      // send reaches the central team; pulses.note never does.
+      sendCentral: async () => { if (!s.cType || s.cSending || !s.session) return;
+        const ref = `BP-${week.replace(/-/g,'').slice(2)}-${Math.floor(100+Math.random()*900)}`;
+        this.setState({ cSending:true });
+        try {
+          await BloomAPI.insertRequest({ ref, schoolId:s.schoolId, weekStart:week, type:s.cType, topic:effTopic, impact:s.impact, context:s.cContext, help:s.cHelp, userId:s.session.user.id });
+          this.setState({ cSent:true, cRef:ref, cSending:false }, () => this.refreshRequests());
+        } catch (e) { this.setState({ cSending:false }); }
+      },
+      // Sign-in — Supabase magic link (replaces the demo school picker)
+      needsSchool: s.authStatus !== 'signed_in',
+      schoolName: school.name, schoolShort: school.short_name || school.name.replace('Bloom Academy, ', ''), schoolInitial: (school.short_name || school.name || 'B').trim()[0].toUpperCase(),
+      authIdle: s.authStatus !== 'sent', authSent: s.authStatus === 'sent',
+      authError: !!s.authError, authErrorText: s.authError,
+      email: s.email, setEmail: e => this.setState({ email:e.target.value, authError:'' }),
+      authDisabled: authBusy || !emailOk, authBtnBg: (authBusy || !emailOk) ? '#D8D2E4' : GREEN, authBtnFg: (authBusy || !emailOk) ? '#5A5E74' : PAPER,
+      authBtnLabel: s.authStatus === 'loading' ? 'Checking your session…' : s.authStatus === 'sending' ? 'Sending…' : 'Send me a sign-in link',
+      sendLink: async () => {
+        const email = s.email.trim();
+        if (!EMAIL_RE.test(email) || authBusy) return;
+        this.setState({ authStatus:'sending', authError:'' });
+        try { await BloomAPI.sendMagicLink(email); this.setState({ authStatus:'sent' }); }
+        catch (e) {
+          const notInvited = /not found|signup|disabled|not allowed/i.test((e && e.message) || '');
+          this.setState({ authStatus:'signed_out', authError: notInvited ? 'That address is not on the Bloom pilot list. Ask the central team to add you.' : 'Couldn’t send the link just now. Check your connection and try again.' });
+        }
+      },
+      useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'' }),
+      openDemo: () => this.setState({ sheet:'demo' }),
+      // Switching school is admin impersonation only; principals are bound to their profile.
+      canSwitchSchool: (s.profile || {}).role === 'admin',
+      switchSchool: async () => { this.setState({ sheet:null }); await BloomAPI.signOut(); },
+      // Participation only. Which theme another school picked is never sent to this client —
+      // the aggregate on Step 2 is the single cross-school view.
+      schoolRows: (s.schools || []).map((x, i) => { const own = x.id === s.schoolId; const inWeek = own && s.saved && !s.skipped;
+        return { name:x.name, divider: i ? '1px solid #E6E2EB' : 'none', weight: own ? 600 : 400,
+          dot: own ? (inWeek ? GREEN : BORDER) : '#B5A3D2',
+          status: own ? (s.skipped ? 'Skipped' : inWeek ? T[s.topic].label : 'No pulse yet') : 'Counted in the network view only' }; }),
+      inboxCount: `${(s.requests || []).length} ${(s.requests || []).length === 1 ? 'request' : 'requests'}`, hasInbox: (s.requests || []).length > 0, noInbox: !(s.requests || []).length,
+      inboxItems: (s.requests || []).map(q => ({ ...q, typeLabel: (SUPPORT_TYPES.find(t => t.id === q.type) || {label:'Request'}).label, themeLabel: (T[q.topic] || T.other).label, school: ((s.schools || []).find(x => x.id === q.schoolId) || {name:'Unknown school'}).name.replace('Bloom Academy, ', ''), impactLabel: (IMPACTS.find(i => i.id === q.impact) || {label:'not shared'}).label.toLowerCase(), when: new Date(q.atISO).toLocaleDateString('en-TT', { day:'numeric', month:'short' }), hasHelp: !!(q.help && q.help.trim()) })),
+      // Was "Reset demo data". With server-backed data the equivalent is ending the session;
+      // only the device-local draft is cleared here.
+      resetLabel: 'Sign out',
+      resetDemo: async () => {
+        try { localStorage.removeItem('bloom-pulse-draft:' + (s.schoolId || 'none')); } catch (e) {}
+        this.setState({ sheet:null, topic:null, impact:null, note:'', saved:false, skipped:false, screen:1, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, ai:{ key:null, status:'idle', data:null, error:'' } });
+        await BloomAPI.signOut();
+      },
+      // Perks
+      perksTitle: s.saved ? 'Thanks for showing up' : 'Your points and perks',
+      perksPreview, perksIntro: perksPreview ? 'Every weekly pulse earns Bloom points now. From Term 2 you’ll spend them with local businesses that back Trinidad & Tobago schools.' : 'Every weekly pulse earns Bloom points. Spend them with local businesses that back Trinidad & Tobago schools.',
+      perksHeading: perksPreview ? 'Partners in discussion' : 'Partner perks',
+      perksSub: perksPreview ? 'The offers Bloom is negotiating for Term 2. Tap one to see how redemption will work.' : 'Offers from businesses supporting Bloom schools. Redeem with points and show the code in store.',
+      perksFootnote: perksPreview ? 'Offers are indicative until each partner signs; terms may change. Points: 10 per weekly pulse · +5 for a note · +10 when all five schools take part.' : 'Final terms are set by each partner. Points: 10 per weekly pulse · +5 for a note · +10 when all five schools take part.',
+      points, hasEarned: earnedLines.length > 0, earnedLines,
+      streakLabel: s.skipped ? `Streak paused at ${streak}` : `${streak}-week streak`,
+      nextBadge: '8-week streak', nextBadgeProgress: `${streak}/8`, nextBadgePct: `${streak/8*100}%`, nextBadgePctNum: Math.round(streak/8*100),
+      badges,
+      networkGoalLabel: `${included} of ${nSchools}`, networkGoalText: fullNetwork ? 'All schools took part — everyone earns +10 points this week.' : `${nSchools - included} more ${nSchools - included === 1 ? 'school' : 'schools'} and every principal earns +10 points.`,
+      perks: perkList.map(k => { const r = s.redeemed[k.id], can = !perksPreview && !!k.active && points >= k.cost; return { ...k, border: r ? GREEN : BORDER, markBg: r ? GREEN : MINT, markFg: r ? PAPER : GREEN,
+        costLabel: r ? 'Redeemed' : `${k.cost} pts`, costColor: r ? GREEN : can ? INK : MUTED, status: r ? 'Show code' : perksPreview ? 'Term 2' : can ? 'Available' : `${k.cost - points} more`,
+        open: () => this.setState({ sheet:'perk', perkId:k.id }) }; }),
+      perk,
+      // bloom-pulse-rewards -> POST /functions/v1/redeem. The code, the expiry and the
+      // points debit are all issued server-side; the client only re-reads the result.
+      redeemPerk: async () => { if (!perkCan || perkRed) return;
+        if (!s.confirmRedeem) { this.setState({ confirmRedeem:true }); clearTimeout(this.redeemT); this.redeemT = setTimeout(() => this.setState({ confirmRedeem:false }), 5000); return; }
+        clearTimeout(this.redeemT);
+        this.setState({ confirmRedeem:false });
+        try { await BloomAPI.redeem(perkSel.id); } catch (e) {}
+        this.refreshRewards();
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
