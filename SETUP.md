@@ -127,9 +127,17 @@ inactive perks and 7 allow-list rows.
   status and assign controls send `{status:'in_progress'}` and `{assigned_to:<uid>}`. Loads
   clean at 1100px and 390px with no horizontal scroll.
 
-Not verified here: the browser's own network path to Supabase and the edge-function CORS
-preflight — this sandbox blocks `*.supabase.co` and the CDNs, so neither a browser nor curl
-can reach the project. Everything reachable over SQL was checked directly.
+**Live, from outside** (unauthenticated requests made from the database, which is on the open
+internet — this sandbox itself blocks `*.supabase.co` and `*.vercel.app`)
+
+- `https://flourishing-sage.vercel.app/` → 200, 3,233,372 bytes, byte-identical to the local
+  build; `/inbox`, `/supabase.js`, `/manifest.webmanifest` and the icons all 200 with the right
+  MIME types, and `X-Frame-Options: DENY` on every route confirms `vercel.json` is applied.
+- CORS preflight on `/auth/v1/otp` → 200, `access-control-allow-origin: *`, so the browser can
+  reach Supabase Auth from the deployed origin.
+- CORS preflight on `/functions/v1/tailor` → 200, `access-control-allow-origin: *`, which
+  confirms the preflight handling added to both edge functions (the handoff versions answered
+  `OPTIONS` with 405).
 
 ## Hosting
 
