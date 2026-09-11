@@ -183,11 +183,16 @@ Two settings, both in the Supabase dashboard, both unavailable to the tooling he
    `tailor` returns `{status:'error'}` on every call. The client already degrades correctly:
    it shows the evidence-based default idea with an explanation, so nothing looks broken.
 
-2. **Auth URL configuration** — Authentication → URL Configuration. Set *Site URL* to wherever
-   the app is hosted and add that origin to *Redirect URLs*. The default is
-   `http://localhost:3000`, so **magic links will not work until this is changed** — the link
-   in the email would send principals to localhost. The client requests
-   `window.location.origin + pathname` as its redirect.
+2. **Auth URL configuration** — Authentication → URL Configuration. Set *Site URL* to the
+   deployed origin and add it to *Redirect URLs*. The default is `http://localhost:3000`, so
+   until this is set the link in the email sends people to localhost.
+
+   This is no longer a hard blocker: the sign-in screen has a **"The link didn't work"**
+   fallback. Paste either the link from the email or the address it opened, and the app
+   exchanges it for a session directly (`verifyOtp` on the token, or `setSession` when the
+   address already carries one in its fragment) — no redirect involved. Worth setting anyway,
+   so the link just works and nobody has to copy anything. The fallback also covers email
+   clients that rewrite or pre-fetch links, which consumes a one-time token.
 
 Then, to bring people on:
 

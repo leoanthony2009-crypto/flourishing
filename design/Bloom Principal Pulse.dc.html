@@ -410,6 +410,19 @@ textarea{resize:none}
       <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;line-height:1.2;color:#14224A;">Check your email</div>
       <p style="margin:0;font-size:14px;line-height:1.5;color:#666A80;text-wrap:pretty;">We’ve sent a sign-in link to <strong style="color:#14224A;font-weight:600;">{{ email }}</strong>. Open it on this device to continue. The link expires in one hour.</p>
       <button type="button" onClick="{{ useAnotherEmail }}" style="align-self:flex-start;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Use a different email</button>
+      <div style="border-top:1px solid #E6E2EB;padding-top:12px;margin-top:2px;">
+        <button type="button" onClick="{{ togglePaste }}" aria-expanded="{{ pasteOpen }}" style="display:flex;align-items:center;gap:6px;min-height:32px;padding:0;border:none;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">The link didn’t work</button>
+        <sc-if value="{{ pasteOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+          <label for="paste-link" style="font-size:13px;line-height:1.45;color:#666A80;">Copy the link from the email — or the address it opened — and paste it here.</label>
+          <input id="paste-link" type="text" inputMode="url" autoComplete="off" placeholder="https://…" value="{{ pasteValue }}" onChange="{{ setPaste }}" style="display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:14px;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6" />
+          <sc-if value="{{ pasteError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">{{ pasteErrorText }}</p>
+          </sc-if>
+          <button type="button" onClick="{{ submitPaste }}" disabled="{{ pasteDisabled }}" style="min-height:44px;border-radius:999px;border:none;background:{{ pasteBtnBg }};color:{{ pasteBtnFg }};font-size:14px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ pasteBtnLabel }}</button>
+        </div>
+        </sc-if>
+      </div>
     </div>
     </sc-if>
 
@@ -759,6 +772,7 @@ class Component extends DCLogic {
   state = { showMore:false, screen:1, topic:null, impact:null, note:'', saved:false, skipped:false, justSaved:false, sheet:null, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, cRef:'', copied:false, ai:{ key:null, status:'idle', data:null, error:'' }, redeemed:{}, perkId:null,
     // Session + server state. `schoolId` now comes from profiles.school_id, not localStorage.
     authStatus:'loading', email:'', authError:'', session:null, profile:null, schoolId:null,
+    pasteOpen:false, pasteValue:'', pasteError:'', pasting:false,
     schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
     submitting:false, submitError:'', cSending:false };
 
@@ -1176,7 +1190,31 @@ class Component extends DCLogic {
           this.setState({ authStatus:'signed_out', authError: notInvited ? 'That address is not on the Bloom pilot list. Ask the central team to add you.' : 'Couldn’t send the link just now. Check your connection and try again.' });
         }
       },
-      useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'' }),
+      useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'', pasteOpen:false, pasteValue:'', pasteError:'' }),
+      // Fallback when the sign-in link cannot complete its redirect (Supabase's Site URL not
+      // pointing here yet, or an email client that rewrites links).
+      pasteOpen: s.pasteOpen, pasteValue: s.pasteValue,
+      togglePaste: () => this.setState(st => ({ pasteOpen: !st.pasteOpen, pasteError:'' })),
+      setPaste: e => this.setState({ pasteValue: e.target.value, pasteError:'' }),
+      pasteError: !!s.pasteError, pasteErrorText: s.pasteError,
+      pasteDisabled: s.pasting || !s.pasteValue.trim(),
+      pasteBtnBg: (s.pasting || !s.pasteValue.trim()) ? '#D8D2E4' : GREEN,
+      pasteBtnFg: (s.pasting || !s.pasteValue.trim()) ? '#5A5E74' : PAPER,
+      pasteBtnLabel: s.pasting ? 'Signing you in…' : 'Sign me in',
+      submitPaste: async () => {
+        if (s.pasting || !s.pasteValue.trim()) return;
+        this.setState({ pasting:true, pasteError:'' });
+        try {
+          await BloomAPI.completeSignIn(s.pasteValue);
+          this.setState({ pasting:false, pasteOpen:false, pasteValue:'' });
+        } catch (e) {
+          const m = (e && e.message) || '';
+          this.setState({ pasting:false, pasteError:
+            m === 'bad_link' ? 'That doesn’t look like a sign-in link. Copy the whole address, starting with https://.'
+            : /expired|invalid/i.test(m) ? 'That link has already been used or has expired. Send yourself a new one.'
+            : 'Couldn’t sign you in with that link. Send yourself a new one and try again.' });
+        }
+      },
       openDemo: () => this.setState({ sheet:'demo' }),
       // Switching school is admin impersonation only; principals are bound to their profile.
       canSwitchSchool: role === 'admin',

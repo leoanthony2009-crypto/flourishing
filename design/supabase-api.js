@@ -69,6 +69,32 @@
       var c = await ready(); if (!c) return;
       await c.auth.signOut();
     },
+    // Rescue path for a sign-in link that could not complete its redirect — the usual cause
+    // is Supabase's Site URL not yet pointing at this app, so the link lands on localhost.
+    // Accepts either form:
+    //   the link from the email        .../auth/v1/verify?token=...&type=magiclink
+    //   the URL it landed on           http://localhost:3000/#access_token=...&refresh_token=...
+    completeSignIn: async function (pasted) {
+      var c = await ready(); if (!c) throw new Error('offline');
+      var url;
+      try { url = new URL(String(pasted || '').trim()); } catch (e) { throw new Error('bad_link'); }
+
+      // Already-verified link: the session is sitting in the fragment.
+      var frag = new URLSearchParams((url.hash || '').replace(/^#/, ''));
+      var access = frag.get('access_token'), refresh = frag.get('refresh_token');
+      if (access && refresh) {
+        var set = await c.auth.setSession({ access_token: access, refresh_token: refresh });
+        if (set.error) throw set.error;
+        return set.data;
+      }
+
+      // Unclicked link: exchange the token for a session directly, no redirect involved.
+      var token = url.searchParams.get('token_hash') || url.searchParams.get('token');
+      if (!token) throw new Error('bad_link');
+      var res = await c.auth.verifyOtp({ token_hash: token, type: url.searchParams.get('type') || 'magiclink' });
+      if (res.error) throw res.error;
+      return res.data;
+    },
     // profiles.school_id + role for the signed-in user. Null means "not on the pilot list".
     loadProfile: async function () {
       var c = await ready(); if (!c) return null;
