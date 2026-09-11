@@ -67,17 +67,20 @@ re-serialisation, with supabase-js and the data layer inlined the way lucide alr
 the installed PWA has no third-party runtime dependency.
 
 ```
-npm run verify-build   # asserts the transform reproduces the originally shipped
-                       # bundle byte-for-byte from build-reference.dc.html
+npm run check          # verify-build + staleness + static checks (run this)
 npm run build          # rebuild deploy/index.html from design/
-npm run check          # verify-build + build + static checks
+npm run verify-build   # assert the transform reproduces the originally shipped bundle
+npm run check-bundle   # assert the committed bundle matches design/
 npm run serve          # http://127.0.0.1:8765
 npm run smoke          # headless load: no console errors, no external requests
 ```
 
-`verify-build` is the guard that makes the build trustworthy: it re-runs the transform on the
-pristine design file and compares against a pinned sha256 of the bundle as originally shipped.
-Run it before trusting a rebuild.
+Two guards make the build trustworthy. `verify-build` re-runs the transform on the pristine
+design file (`build-reference.dc.html`) and compares against a pinned sha256 of the bundle as
+originally shipped, so the transform is proven before it is trusted with edited source.
+`check-bundle` asserts the committed bundle is what `design/` currently produces. Builds are
+byte-reproducible — gzip mtimes are zeroed — so that comparison is meaningful and rebuilds
+make clean diffs.
 
 ## Verified
 

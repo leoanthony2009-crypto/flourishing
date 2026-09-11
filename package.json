@@ -8,7 +8,8 @@
     "serve": "python3 -m http.server 8765 --directory deploy",
     "smoke": "node smoke.mjs",
     "e2e": "node e2e.mjs",
-    "check": "python3 build.py --verify && python3 build.py && node checks.mjs"
+    "check": "python3 build.py --verify && python3 build.py --check && node checks.mjs",
+    "check-bundle": "python3 build.py --check"
   },
   "devDependencies": {
     "playwright": "^1.49.1"

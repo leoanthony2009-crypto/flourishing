@@ -9,7 +9,11 @@ the result is byte-identical to the template already in the bundle, so the trans
 known-good before it is trusted with the edited source.
 
   python3 build.py --verify   # prove the transform reproduces the shipped bundle
+  python3 build.py --check    # assert the committed bundle matches design/
   python3 build.py            # rebuild deploy/index.html from design/
+
+Builds are byte-reproducible: the same design/ always produces the same bundle, so --check
+is a reliable staleness guard and rebuilds make clean diffs.
 """
 import base64, gzip, hashlib, io, json, os, re, sys
 
@@ -95,6 +99,7 @@ def transform(design, font_style):
 
 def main():
     verify = '--verify' in sys.argv
+    check_only = '--check' in sys.argv
     bundle = io.open(BUNDLE, encoding='utf-8').read()
     b = blocks(bundle)
     template = json.loads(bundle[b['template'][0]:b['template'][1]])
@@ -129,7 +134,9 @@ def main():
         manifest[ref] = {
             'mime': 'text/javascript',
             'compressed': True,
-            'data': base64.b64encode(gzip.compress(raw, 9)).decode(),
+            # mtime=0: gzip stamps the current time into its header otherwise, which
+            # would make every rebuild produce different bytes for identical input.
+            'data': base64.b64encode(gzip.compress(raw, 9, mtime=0)).decode(),
         }
     design = design.replace(
         '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>',
@@ -149,6 +156,12 @@ def main():
     new = (bundle[:b['manifest'][0]] + '\n' + enc(manifest) + '\n  '
            + bundle[b['manifest'][1]:b['template'][0]] + '\n' + enc(out) + '\n  '
            + bundle[b['template'][1]:])
+    if check_only:
+        if new == bundle:
+            print('check: deploy/index.html is up to date with design/')
+            return
+        sys.exit('check FAILED: deploy/index.html is stale - run `npm run build`')
+
     io.open(BUNDLE, 'w', encoding='utf-8').write(new)
     print('rebuilt %s (%.1f MB)' % (BUNDLE, len(new) / 1e6))
 
