@@ -3,13 +3,13 @@
   "private": true,
   "description": "Weekly principal check-in for the five Bloom Academy schools in Trinidad & Tobago.",
   "scripts": {
+    "check": "python3 build.py --verify && python3 build.py --check && node checks.mjs",
     "build": "python3 build.py",
     "verify-build": "python3 build.py --verify",
+    "check-bundle": "python3 build.py --check",
     "serve": "python3 -m http.server 8765 --directory deploy",
-    "smoke": "node smoke.mjs",
-    "e2e": "node e2e.mjs",
-    "check": "python3 build.py --verify && python3 build.py --check && node checks.mjs",
-    "check-bundle": "python3 build.py --check"
+    "smoke": "node smoke.mjs && node inbox-smoke.mjs && node inbox-render.mjs",
+    "e2e": "node e2e.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.1"

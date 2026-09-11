@@ -545,6 +545,9 @@ textarea{resize:none}
               </sc-for>
             </div>
             </sc-if>
+            <sc-if value="{{ canManageInbox }}" hint-placeholder-val="{{ false }}">
+            <a href="/inbox.html" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;min-height:44px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Open the full inbox</a>
+            </sc-if>
             <sc-if value="{{ noInbox }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 14px;border-radius:12px;background:#F6F5F0;font-size:13px;color:#666A80;">No requests yet. Requests sent from “I need central-team support” appear here.</div></sc-if>
           </div>
           <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
@@ -1177,6 +1180,8 @@ class Component extends DCLogic {
       openDemo: () => this.setState({ sheet:'demo' }),
       // Switching school is admin impersonation only; principals are bound to their profile.
       canSwitchSchool: role === 'admin',
+      // Principals see their own requests above; only central staff can work them.
+      canManageInbox: isCentral,
       switchSchool: async () => { this.setState({ sheet:null }); await BloomAPI.signOut(); },
       // Participation only. Which theme another school picked is never sent to this client —
       // the aggregate on Step 2 is the single cross-school view.

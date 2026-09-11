@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en-TT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F5F0">
+<title>Central-team inbox — Bloom Principal Pulse</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap" rel="stylesheet">
+<style>
+  /* Design tokens from the handoff. Do not restyle. */
+  :root {
+    --ink:#14224A; --navy:#1E3A78; --lav:#F0ECF6; --lav-2:#D8D2E4; --lav-3:#C9B8E6;
+    --paper:#FFFEF9; --canvas:#F6F5F0; --gold:#8A6614; --gold-2:#D9B44A; --gold-3:#F8F3E8;
+    --muted:#666A80; --line:#E6E2EB;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink);
+    font-family:system-ui,-apple-system,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:'Source Serif 4',Georgia,'Times New Roman',serif; font-weight:500; margin:0; }
+  a { color:var(--navy); }
+  button,select,input { font:inherit; }
+  button { cursor:pointer; }
+  button:disabled { cursor:default; }
+  :focus-visible { outline:3px solid var(--navy); outline-offset:2px; }
+
+  .wrap { max-width:940px; margin:0 auto; padding:0 16px 48px; }
+  header { background:var(--paper); border-bottom:1px solid var(--line); }
+  .head { max-width:940px; margin:0 auto; padding:18px 16px; display:flex; align-items:center;
+    justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand img { width:44px; height:44px; object-fit:contain; flex:none; }
+  .eyebrow { font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--navy); }
+
+  .btn { min-height:44px; padding:0 16px; border-radius:999px; border:none;
+    background:var(--navy); color:var(--paper); font-size:14px; font-weight:600; }
+  .btn:disabled { background:var(--lav-2); color:#5A5E74; }
+  .btn-ghost { min-height:44px; padding:0 14px; border-radius:999px; border:1.5px solid var(--lav-2);
+    background:transparent; color:var(--navy); font-size:13px; font-weight:600; }
+
+  .card { background:var(--paper); border:1px solid var(--lav-2); border-radius:16px; padding:16px; }
+  .muted { color:var(--muted); }
+
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin:20px 0 14px; }
+  .chip { min-height:44px; padding:0 14px; border-radius:999px; border:1.5px solid var(--lav-2);
+    background:var(--paper); color:var(--ink); font-size:13px; font-weight:500; }
+  .chip[aria-pressed="true"] { border:2px solid var(--navy); background:var(--lav); font-weight:600; }
+
+  .req { background:var(--paper); border:1px solid var(--lav-2); border-radius:16px; padding:16px; margin-bottom:12px; }
+  .req.urgent { border:2px solid var(--gold); background:var(--gold-3); }
+  .req-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .ref { font-size:13px; font-weight:600; letter-spacing:.02em; }
+  .tag { display:inline-flex; align-items:center; padding:4px 11px; border-radius:999px;
+    background:var(--lav); font-size:12px; font-weight:600; color:var(--ink); }
+  .tag.urgent { background:var(--gold-2); color:#2B2100; }
+  .meta { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
+  .field { margin-top:12px; }
+  .field dt { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:3px; }
+  .field dd { margin:0; font-size:15px; line-height:1.5; white-space:pre-wrap; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+  select { min-height:44px; padding:0 12px; border-radius:12px; border:1.5px solid var(--lav-2);
+    background:var(--paper); color:var(--ink); font-size:14px; }
+
+  #signin { max-width:420px; margin:56px auto; }
+  #signin input { width:100%; min-height:50px; padding:12px 14px; border-radius:14px;
+    border:1.5px solid var(--lav-2); background:var(--paper); font-size:15px; }
+  .note { display:flex; gap:10px; padding:12px 14px; background:var(--lav); border-radius:12px;
+    font-size:13px; line-height:1.45; color:#454A68; }
+  .err { color:var(--gold); font-size:13px; line-height:1.45; }
+
+  footer { border-top:1px solid var(--line); background:var(--paper); margin-top:40px; }
+  .foot { max-width:940px; margin:0 auto; padding:20px 16px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .foot strong { color:var(--ink); }
+
+  @media (max-width:520px) { .req-top { flex-direction:column; gap:6px; } }
+  @media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head">
+    <div class="brand">
+      <img src="/icon-192.png" alt="">
+      <div>
+        <div class="eyebrow">Bloom Principal Pulse</div>
+        <h1 style="font-size:21px;line-height:1.15;margin-top:2px;">Central-team inbox</h1>
+      </div>
+    </div>
+    <div id="who" class="muted" style="font-size:13px;"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Sign in -->
+  <section id="signin" hidden>
+    <div class="card">
+      <h2 style="font-size:22px;margin-bottom:8px;">Sign in</h2>
+      <p class="muted" style="margin:0 0 16px;font-size:15px;line-height:1.5;">
+        Central-team and admin accounts only. We'll email you a sign-in link.</p>
+      <label for="email" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Email address</label>
+      <input id="email" type="email" autocomplete="email" placeholder="central@cebm.tt">
+      <p id="signin-err" class="err" role="alert" style="margin:8px 0 0;" hidden></p>
+      <button id="send" class="btn" style="width:100%;margin-top:14px;min-height:50px;" disabled>Send me a sign-in link</button>
+      <p id="sent" class="note" style="margin-top:14px;" hidden>Check your email for the sign-in link.</p>
+    </div>
+  </section>
+
+  <!-- Not permitted -->
+  <section id="denied" hidden>
+    <div class="card" style="margin-top:40px;">
+      <h2 style="font-size:20px;margin-bottom:8px;">Not a central-team account</h2>
+      <p class="muted" style="margin:0 0 16px;font-size:15px;line-height:1.5;">
+        This page is for the CEBM central team. Principals use the app itself.</p>
+      <a class="btn-ghost" href="/" style="display:inline-flex;align-items:center;padding:0 14px;line-height:44px;text-decoration:none;">Open Principal Pulse</a>
+      <button id="signout-denied" class="btn-ghost" style="margin-left:8px;">Sign out</button>
+    </div>
+  </section>
+
+  <!-- Inbox -->
+  <section id="inbox" hidden>
+    <div class="filters" role="group" aria-label="Filter by status">
+      <button class="chip" data-filter="open" aria-pressed="true">Open</button>
+      <button class="chip" data-filter="new" aria-pressed="false">New</button>
+      <button class="chip" data-filter="in_progress" aria-pressed="false">In progress</button>
+      <button class="chip" data-filter="closed" aria-pressed="false">Closed</button>
+      <button class="chip" data-filter="all" aria-pressed="false">All</button>
+      <button id="refresh" class="btn-ghost" style="margin-left:auto;">Refresh</button>
+    </div>
+    <p id="count" class="muted" style="font-size:13px;margin:0 0 14px;"></p>
+    <div id="list"></div>
+    <p id="empty" class="muted" hidden style="padding:24px;text-align:center;">No requests with this status.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <strong>Urgent concerns do not wait for this inbox.</strong><br>
+    CEBM central team <a href="tel:+18686072326">+1 868-607-2326</a> (Mon–Fri, 8am–4pm) ·
+    Lifeline <a href="tel:8005588">(800) 5588</a> (24/7) ·
+    Children's Authority <a href="tel:996">996</a> ·
+    Emergency <a href="tel:999">999</a>
+    <div style="margin-top:10px;">Principals' pulse notes are never shown here — only the context a principal chose to send with a request.</div>
+  </div>
+</footer>
+
+<script src="/supabase.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // Same project as the app. Publishable key; every table is behind RLS.
+  var CFG = { url: 'https://phnpteeujuaqebzteacd.supabase.co', key: 'sb_publishable_SzTl41P5xSLODN4juR-Hwg_Q9BWkfS-' };
+  var sb = window.supabase.createClient(CFG.url, CFG.key, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
+
+  var TYPES  = { advice:'Advice', conversation:'Conversation', practical_help:'Practical help', urgent:'Urgent' };
+  var STATUS = { new:'New', in_progress:'In progress', closed:'Closed' };
+  var IMPACT = { little:'a little', quite_a_bit:'quite a bit', a_lot:'a lot' };
+  var TOPICS = {
+    workload:'Workload & wellbeing', staffing:'Staffing & capacity', teaching:'Teaching & learning',
+    behaviour:'Student behaviour', attendance:'Attendance', safeguarding:'Safeguarding',
+    parents:'Parents & community', send:'SEND & inclusion', culture:'Culture & values',
+    confidence:'Staff confidence', resources:'Resources & budget', change:'Leading change',
+    data:'Data & assessment', other:'Something else',
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
+    return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]; }); };
+
+  var state = { profile:null, schools:{}, rows:[], filter:'open' };
+
+  function show(which) {
+    ['signin','denied','inbox'].forEach(function (id) { $(id).hidden = id !== which; });
+  }
+
+  // ---- sign in -------------------------------------------------------------
+  var EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  $('email').addEventListener('input', function () {
+    $('send').disabled = !EMAIL_RE.test($('email').value.trim());
+    $('signin-err').hidden = true;
+  });
+  $('send').addEventListener('click', async function () {
+    var email = $('email').value.trim();
+    if (!EMAIL_RE.test(email)) return;
+    $('send').disabled = true; $('send').textContent = 'Sending…';
+    try {
+      var r = await sb.auth.signInWithOtp({
+        email: email,
+        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin + window.location.pathname },
+      });
+      if (r.error) throw r.error;
+      $('sent').hidden = false;
+      $('send').textContent = 'Link sent';
+    } catch (e) {
+      $('signin-err').textContent = /not found|signup|disabled|not allowed/i.test(e.message || '')
+        ? 'That address is not on the Bloom pilot list.'
+        : 'Couldn’t send the link just now. Check your connection and try again.';
+      $('signin-err').hidden = false;
+      $('send').disabled = false; $('send').textContent = 'Send me a sign-in link';
+    }
+  });
+
+  async function signOut() { await sb.auth.signOut(); location.reload(); }
+  $('signout-denied').addEventListener('click', signOut);
+
+  // ---- session -------------------------------------------------------------
+  async function boot(session) {
+    if (!session) { show('signin'); $('who').textContent = ''; return; }
+    var p = await sb.from('profiles').select('user_id, email, role, display_name').eq('user_id', session.user.id).maybeSingle();
+    var profile = p.data;
+    // Only central and admin belong here; a principal's own requests are in the app.
+    if (!profile || (profile.role !== 'central' && profile.role !== 'admin')) { show('denied'); return; }
+    state.profile = profile;
+    $('who').innerHTML = esc(profile.email) + ' · <button id="signout" class="btn-ghost" style="min-height:32px;padding:0 12px;">Sign out</button>';
+    $('signout').addEventListener('click', signOut);
+    show('inbox');
+
+    var s = await sb.from('schools').select('id, name, short_name');
+    (s.data || []).forEach(function (x) { state.schools[x.id] = x.short_name || x.name; });
+    await load();
+  }
+
+  sb.auth.onAuthStateChange(function (_e, session) { boot(session); });
+  sb.auth.getSession().then(function (r) { boot(r.data.session); }).catch(function () { show('signin'); });
+
+  // ---- inbox ---------------------------------------------------------------
+  async function load() {
+    var q = sb.from('support_requests').select('*').order('created_at', { ascending: false }).limit(200);
+    var r = await q;
+    if (r.error) { $('count').textContent = 'Couldn’t load requests: ' + r.error.message; return; }
+    state.rows = r.data || [];
+    render();
+  }
+
+  function visible() {
+    if (state.filter === 'all') return state.rows;
+    if (state.filter === 'open') return state.rows.filter(function (x) { return x.status !== 'closed'; });
+    return state.rows.filter(function (x) { return x.status === state.filter; });
+  }
+
+  function render() {
+    var rows = visible();
+    // Urgent first, then newest.
+    rows = rows.slice().sort(function (a, b) {
+      if ((a.type === 'urgent') !== (b.type === 'urgent')) return a.type === 'urgent' ? -1 : 1;
+      return a.created_at < b.created_at ? 1 : -1;
+    });
+    $('count').textContent = rows.length + (rows.length === 1 ? ' request' : ' requests')
+      + (state.filter === 'all' ? '' : ' · ' + state.filter.replace('_', ' '));
+    $('empty').hidden = rows.length > 0;
+    $('list').innerHTML = rows.map(card).join('');
+    $('list').querySelectorAll('select[data-status]').forEach(function (el) {
+      el.addEventListener('change', function () { setStatus(el.getAttribute('data-status'), el.value, el); });
+    });
+    $('list').querySelectorAll('button[data-claim]').forEach(function (el) {
+      el.addEventListener('click', function () { claim(el.getAttribute('data-claim'), el); });
+    });
+  }
+
+  function card(x) {
+    var urgent = x.type === 'urgent';
+    var when = new Date(x.created_at).toLocaleDateString('en-TT', { day:'numeric', month:'short', year:'numeric' });
+    var mine = state.profile && x.assigned_to === state.profile.user_id;
+    return '<article class="req' + (urgent ? ' urgent' : '') + '">'
+      + '<div class="req-top">'
+        + '<span class="ref">' + esc(x.ref) + ' · ' + esc(state.schools[x.school_id] || 'Unknown school') + '</span>'
+        + '<span class="muted" style="font-size:13px;">' + esc(when) + '</span>'
+      + '</div>'
+      + '<div class="meta">'
+        + '<span class="tag' + (urgent ? ' urgent' : '') + '">' + esc(TYPES[x.type] || x.type) + '</span>'
+        + '<span class="tag">' + esc(TOPICS[x.topic] || x.topic) + '</span>'
+        + (x.impact ? '<span class="tag">Affecting them ' + esc(IMPACT[x.impact] || x.impact) + '</span>' : '')
+      + '</div>'
+      + (x.context ? '<dl class="field"><dt>Context the principal sent</dt><dd>' + esc(x.context) + '</dd></dl>' : '')
+      + (x.help ? '<dl class="field"><dt>What would help</dt><dd>' + esc(x.help) + '</dd></dl>' : '')
+      + '<div class="controls">'
+        + '<label for="st-' + esc(x.id) + '" style="font-size:13px;font-weight:600;">Status</label>'
+        + '<select id="st-' + esc(x.id) + '" data-status="' + esc(x.id) + '">'
+          + Object.keys(STATUS).map(function (k) {
+              return '<option value="' + k + '"' + (x.status === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('')
+        + '</select>'
+        + '<button class="btn-ghost" data-claim="' + esc(x.id) + '"' + (mine ? ' disabled' : '') + '>'
+          + (mine ? 'Assigned to you' : x.assigned_to ? 'Reassign to me' : 'Assign to me') + '</button>'
+        + '<span class="muted" style="font-size:12px;" id="msg-' + esc(x.id) + '"></span>'
+      + '</div>'
+    + '</article>';
+  }
+
+  async function patch(id, fields, el, okText) {
+    var msg = $('msg-' + id);
+    el.disabled = true;
+    var r = await sb.from('support_requests').update(fields).eq('id', id).select().single();
+    el.disabled = false;
+    if (r.error) { if (msg) { msg.textContent = 'Not saved: ' + r.error.message; } return; }
+    var i = state.rows.findIndex(function (x) { return x.id === id; });
+    if (i > -1) state.rows[i] = r.data;
+    if (msg) { msg.textContent = okText; setTimeout(function () { render(); }, 900); }
+  }
+
+  function setStatus(id, status, el) { patch(id, { status:status, updated_at:new Date().toISOString() }, el, 'Saved'); }
+  function claim(id, el) { patch(id, { assigned_to: state.profile.user_id, updated_at:new Date().toISOString() }, el, 'Assigned'); }
+
+  $('refresh').addEventListener('click', load);
+  document.querySelectorAll('.chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      state.filter = c.getAttribute('data-filter');
+      document.querySelectorAll('.chip').forEach(function (o) {
+        o.setAttribute('aria-pressed', String(o === c)); });
+      render();
+    });
+  });
+})();
+</script>
+</body>
+</html>

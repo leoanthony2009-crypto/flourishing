@@ -59,6 +59,17 @@ Every row of the handoff's *Client integration points* table is wired:
 | `bloom-pulse-rewards` | `points_ledger` sum + `redemptions` + `/functions/v1/redeem` |
 | `window.claude.complete` | `POST /functions/v1/tailor` |
 
+### Central-team inbox
+
+`deploy/inbox.html` is README section 6: every `support_requests` row newest first (urgent
+pinned to the top) with ref, school, type, theme, impact, context and what would help, plus
+controls to set `status` and claim `assigned_to`. Same magic-link sign-in; `central` and
+`admin` only, and a principal who opens it is told so and sent back to the app. The CEBM,
+Lifeline, Children's Authority and emergency numbers are in the footer, as in the app.
+
+Central staff reach it from the app's Account sheet ("Open the full inbox"), which is shown
+only to those two roles.
+
 ### Building
 
 `deploy/index.html` is a single self-contained 3.2 MB file. The Claude Design bundler that
@@ -106,8 +117,12 @@ inactive perks and 7 allow-list rows.
 **App**
 - Points trigger: a pulse with a note gives `sum(delta) = 15`.
 - Headless load of the built bundle: zero console errors, zero external network requests.
-- All 163 template bindings resolve; the logic block parses; `localStorage` is used only for
+- All template bindings resolve; the logic block parses; `localStorage` is used only for
   drafts.
+- Inbox, driven through its real boot/render path against a stubbed client: urgent sorts
+  first, closed requests are hidden under the default filter and appear under "All", and the
+  status and assign controls send `{status:'in_progress'}` and `{assigned_to:<uid>}`. Loads
+  clean at 1100px and 390px with no horizontal scroll.
 
 Not verified here: the browser's own network path to Supabase and the edge-function CORS
 preflight — this sandbox blocks `*.supabase.co` and the CDNs, so neither a browser nor curl
