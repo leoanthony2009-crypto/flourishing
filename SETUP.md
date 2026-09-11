@@ -128,6 +128,20 @@ Not verified here: the browser's own network path to Supabase and the edge-funct
 preflight — this sandbox blocks `*.supabase.co` and the CDNs, so neither a browser nor curl
 can reach the project. Everything reachable over SQL was checked directly.
 
+## Hosting
+
+`vercel.json` at the repository root configures the whole deploy, so no dashboard settings are
+needed: no install, no build, and `deploy/` as the output directory. Import the repo, leave
+Root Directory empty, deploy.
+
+Vercel's zero-config would otherwise look for a `public/` folder and fail with
+*No Output Directory named "public" found*. It would also run `npm run build` (which is
+`build.py`) and install Playwright, neither of which a static deploy needs.
+
+`deploy/vercel.json` carries the same headers plus `outputDirectory: "."`, so the project still
+works if Root Directory is set to `deploy` instead — Vercel reads whichever file sits in the
+configured root.
+
 ## Deliberately not built
 
 Two items from the handoff have no implementation here, both because building them now would
