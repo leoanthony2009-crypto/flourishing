@@ -142,6 +142,22 @@ Vercel's zero-config would otherwise look for a `public/` folder and fail with
 works if Root Directory is set to `deploy` instead — Vercel reads whichever file sits in the
 configured root.
 
+### Turn off Vercel Authentication for production
+
+**A green build is not enough.** New Vercel projects default to Deployment Protection →
+Vercel Authentication → *Standard Protection*, which the API reports as
+`ssoProtection: { enabled: true, deploymentType: "all_except_custom_domains" }`. It gates every
+deployment URL and exempts only custom domains — and this project has none, so the production
+`.vercel.app` URL is gated too. A principal opening the link is bounced to `vercel.com/sso-api`
+and has to log in to Vercel, which none of them can do.
+
+Vercel project → **Settings → Deployment Protection → Vercel Authentication** → set to
+**Only Preview Deployments** (or Disabled), and Save.
+
+That is safe here: the app has no public read surface of its own. Sign-in is a magic link
+limited to `pilot_allowlist`, every table is behind RLS, and the anonymous role reads zero rows
+from all of them (verified above). Vercel's login page was never what protected the data.
+
 ## Deliberately not built
 
 Two items from the handoff have no implementation here, both because building them now would

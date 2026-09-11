@@ -12,9 +12,15 @@ repository root — run `npm run build`, and `npm run check` to confirm it is in
    output directory `.`.
 3. Open the URL on a phone → "Add to Home Screen" installs it as a standalone app.
 
-**After the first deploy**, set the app's origin in Supabase → Authentication → URL
-Configuration (both *Site URL* and *Redirect URLs*). Magic links go to `http://localhost:3000`
-until you do, so nobody can sign in. See `SETUP.md`.
+**After the first deploy**, two settings outside this repo, or nobody can use the app:
+
+1. Vercel → Settings → **Deployment Protection → Vercel Authentication** → *Only Preview
+   Deployments*. The default (*Standard Protection*) puts a Vercel login in front of the
+   production URL as well.
+2. Supabase → Authentication → **URL Configuration** → set *Site URL* and *Redirect URLs* to
+   the deployed origin. Magic links go to `http://localhost:3000` until you do.
+
+See `SETUP.md`.
 
 ## What's inside
 
