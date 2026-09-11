@@ -128,6 +128,23 @@ Not verified here: the browser's own network path to Supabase and the edge-funct
 preflight — this sandbox blocks `*.supabase.co` and the CDNs, so neither a browser nor curl
 can reach the project. Everything reachable over SQL was checked directly.
 
+## Deliberately not built
+
+Two items from the handoff have no implementation here, both because building them now would
+mean inventing a design the spec leaves open:
+
+- **Partner verification page** (`/verify?code=`, README §5). The spec gates the whole perks
+  phase on the first partner signing, and all three `perks` rows are still `active = false`.
+  It would need a public unauthenticated endpoint over `redemptions` and somewhere to keep a
+  per-partner PIN — neither is in `schema.sql`. Adding a public read surface before it is
+  needed is the wrong trade. When a partner signs: add `perks.verify_pin`, and serve the
+  lookup from an edge function with the service role so only `used_at` and `expires_at` are
+  ever exposed.
+
+- **Outbound email and SMS** (README §3 and §6): the Monday 06:00 invite, and the immediate
+  alert to the CEBM duty line when an `urgent` request arrives. Both need a Resend/Twilio
+  account and keys. The cron slot and the trigger point are noted at the foot of `jobs.sql`.
+
 ## Before the first principal signs in
 
 Two settings, both in the Supabase dashboard, both unavailable to the tooling here:
