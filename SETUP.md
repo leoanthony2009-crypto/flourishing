@@ -123,6 +123,9 @@ inactive perks and 7 allow-list rows.
 - Headless load of the built bundle: zero console errors, zero external network requests.
 - All template bindings resolve; the logic block parses; `localStorage` is used only for
   drafts.
+- Week handling across timezones, with the browser's zone emulated from UTC-11 to UTC+14:
+  every one writes the same Monday, and it matches the week the aggregate is queried for.
+  Before the fix anything east of UTC wrote the previous Sunday.
 - Inbox, driven through its real boot/render path against a stubbed client: urgent sorts
   first, closed requests are hidden under the default filter and appear under "All", and the
   status and assign controls send `{status:'in_progress'}` and `{assigned_to:<uid>}`. Loads
