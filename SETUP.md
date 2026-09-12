@@ -29,11 +29,12 @@ and the anonymous role can read nothing at all (verified below).
 | Function privileges and `search_path` | `harden.sql` | `bloom_function_hardening` |
 | Pilot allow-list + auto-provisioning hook | `allowlist.sql` | `bloom_pilot_allowlist` |
 | pg_cron jobs + retention | `jobs.sql` | `bloom_scheduled_jobs` |
+| Note points on update | `points.sql` | `bloom_note_points_on_update` |
 | 5 schools, 3 perks (all `active = false`) | `seed.sql` | seeded |
 | AI proxy | `tailor/` | deployed, `verify_jwt` |
 | Perk codes | `redeem/` | deployed, `verify_jwt` |
 
-`harden.sql`, `allowlist.sql` and `jobs.sql` are new — see each file's header for why.
+`harden.sql`, `allowlist.sql`, `jobs.sql` and `points.sql` are new — see each file's header for why.
 
 ### Scheduled jobs
 

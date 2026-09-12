@@ -97,15 +97,17 @@
       if (res.error) throw res.error;
       return res.data;
     },
-    // profiles.school_id + role for the signed-in user. Null means "not on the pilot list".
+    // Returns {profile} when the row exists, {absent:true} when the user is genuinely not on
+    // the pilot list, {failed:true} when we could not find out. Collapsing the last two would
+    // sign a valid user out mid-session and tell them they are not on the list.
     loadProfile: async function () {
-      var c = await ready(); if (!c) return null;
+      var c = await ready(); if (!c) return { failed: true };
       var u = await c.auth.getUser();
       var user = u && u.data ? u.data.user : null;
-      if (!user) return null;
+      if (!user) return { failed: true };
       var res = await c.from('profiles').select('user_id, email, school_id, role, display_name').eq('user_id', user.id).maybeSingle();
-      if (res.error) throw res.error;
-      return res.data || null;
+      if (res.error) return { failed: true };
+      return res.data ? { profile: res.data } : { absent: true };
     },
 
     // ---- reference data ---------------------------------------------------
@@ -126,7 +128,7 @@
     // Own pulses over a window, for the streak. RLS limits this to the signed-in school.
     myPulseHistory: async function (sinceISO) {
       var c = await ready(); if (!c) return [];
-      return unwrap(await c.from('pulses').select('week_start').gte('week_start', sinceISO).order('week_start', { ascending: false })) || [];
+      return unwrap(await c.from('pulses').select('week_start, topic').gte('week_start', sinceISO).order('week_start', { ascending: false })) || [];
     },
     upsertPulse: async function (p) {
       var c = await ready(); if (!c) throw new Error('offline');
