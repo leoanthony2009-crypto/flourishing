@@ -405,6 +405,15 @@ textarea{resize:none}
     </div>
     </sc-if>
 
+    <sc-if value="{{ staffMode }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;background:#F0ECF6;">
+      <label for="signin-password" style="font-size:13px;font-weight:600;color:#14224A;">Central-team password</label>
+      <p style="margin:0;font-size:12px;line-height:1.45;color:#666A80;">For testing without waiting on the sign-in email. Principals do not have a password and never see this.</p>
+      <input id="signin-password" type="password" autoComplete="current-password" value="{{ password }}" onChange="{{ setPassword }}" style="display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:14px;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #FFFEF9" />
+      <button type="button" onClick="{{ signInWithPassword }}" disabled="{{ pwDisabled }}" style="min-height:44px;border-radius:999px;border:none;background:{{ pwBtnBg }};color:{{ pwBtnFg }};font-size:14px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ pwBtnLabel }}</button>
+    </div>
+    </sc-if>
+
     <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
     <div style="border-top:1px solid #E6E2EB;padding-top:12px;">
       <button type="button" onClick="{{ togglePaste }}" aria-expanded="{{ pasteOpen }}" style="display:flex;align-items:center;gap:6px;min-height:32px;padding:0;border:none;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">I already have a sign-in link</button>
@@ -800,6 +809,9 @@ class Component extends DCLogic {
     // Session + server state. `schoolId` now comes from profiles.school_id, not localStorage.
     authStatus:'loading', email:'', authError:'', session:null, profile:null, schoolId:null,
     pasteOpen:false, pasteValue:'', pasteError:'', pasting:false,
+    // Staff password sign-in, revealed only by ?staff=1. Read once, at construction, so a
+    // later history.replaceState (the link-error cleanup does one) cannot switch it off.
+    staffMode: /[?&]staff=1(&|$)/.test(window.location.search), password:'', pwBusy:false,
     // What the server holds, as distinct from what is currently being edited.
     savedTopic:null, savedNote:'', myWeeks:[],
     schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
@@ -1300,6 +1312,29 @@ class Component extends DCLogic {
             : /rate|too many|limit/i.test(m)
               ? 'Too many sign-in emails just now. Wait a few minutes and try again.'
             : 'Couldn’t send the link just now. Check your connection and try again.' });
+        }
+      },
+      staffMode: s.staffMode,
+      password: s.password,
+      setPassword: e => this.setState({ password:e.target.value, authError:'' }),
+      pwDisabled: s.pwBusy || !emailOk || !s.password,
+      pwBtnBg: (s.pwBusy || !emailOk || !s.password) ? '#D8D2E4' : '#14224A',
+      pwBtnFg: (s.pwBusy || !emailOk || !s.password) ? '#5A5E74' : PAPER,
+      pwBtnLabel: s.pwBusy ? 'Signing in…' : 'Sign in with password',
+      signInWithPassword: async () => {
+        if (s.pwBusy || !emailOk || !s.password) return;
+        this.setState({ pwBusy:true, authError:'' });
+        try {
+          await BloomAPI.signInWithPassword(s.email.trim(), s.password);
+          // onAuthChange carries it from here; drop the password rather than leave it in state.
+          this.setState({ pwBusy:false, password:'' });
+        } catch (e) {
+          const m = (e && e.message) || '';
+          this.setState({ pwBusy:false, authError:
+            /invalid login|credentials/i.test(m)
+              ? 'That email and password don’t match an account. Password sign-in is only set up for the central team.'
+            : /rate|too many/i.test(m) ? 'Too many attempts just now. Wait a few minutes and try again.'
+            : 'Couldn’t sign you in just now. Check your connection and try again.' });
         }
       },
       useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'', pasteOpen:false, pasteValue:'', pasteError:'' }),
