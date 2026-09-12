@@ -107,6 +107,8 @@ stubbed; the component, its state and the whole template are the real thing.
 | `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
 | `staff-signin.mjs` | the `?staff=1` password route: hidden by default, real session when used |
 | `mission-link.mjs` | the **Our mission** link: href, `rel="noopener noreferrer"`, 44px target |
+| `a11y.mjs` | what survives the documentElement swap, names, targets, dialog focus |
+| `edge-cases.mjs` | double-submit, hostile open text, session lost mid-writing |
 
 `npm run check` also runs two suites against the edge function's own modules under Node, so
 they test the deployed code rather than a copy:
@@ -305,6 +307,32 @@ and stay protected, which is the sensible default.
 
 If you later add a custom domain it is exempt too, and if you ever want the team-slug URLs open
 as well, set Vercel Authentication to *Only Preview Deployments*.
+
+### Accessibility
+
+The bundler boots with `document.documentElement.replaceWith(doc.documentElement)`, swapping the
+whole `<html>` for one built from the template. **Anything living only in the outer `<head>` is
+destroyed the moment JavaScript runs.** The static HTML looked perfect; the live DOM had lost:
+
+| | Consequence |
+|---|---|
+| `<title>` | empty tab, nothing announced on load — WCAG 2.4.2 (A) |
+| `<link rel="manifest">` | **no "Add to Home Screen"**, on an app built to be a weekly phone habit |
+| `<link rel="icon">`, apple-touch-icon | no icon anywhere |
+| `lang` (never set at all) | screen readers guess the voice — WCAG 3.1.1 (A) |
+
+All of it now lives in the `<helmet>` block, which survives the swap, with `lang` set by a
+script because the attribute belongs on `<html>` and the replacement carries no attributes.
+`a11y.mjs` asserts each one **after boot**, which is the only place the failure was visible.
+
+Already sound, and now covered so it stays that way: every control has an accessible name, no
+target is below the 44px the app uses throughout, every image has `alt`, the sheet is
+`aria-modal` with a label, focus moves into it on open, Escape closes it, and focus returns to
+the control that opened it.
+
+Note on WCAG 2.2 SC 3.3.8 *Accessible Authentication*: the magic link passes it outright — there
+is no password to recall or transcribe. The `?staff=1` password route is a separate, deliberate
+path for the central team, not the one principals use.
 
 ## Deliberately not built
 
