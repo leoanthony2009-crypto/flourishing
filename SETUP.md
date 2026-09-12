@@ -106,6 +106,7 @@ stubbed; the component, its state and the whole template are the real thing.
 | `link-safety.mjs` | the **real** `completeSignIn` against foreign links and tokens |
 | `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
 | `staff-signin.mjs` | the `?staff=1` password route: hidden by default, real session when used |
+| `mission-link.mjs` | the **Our mission** link: href, `rel="noopener noreferrer"`, 44px target |
 
 `npm run check` also runs two suites against the edge function's own modules under Node, so
 they test the deployed code rather than a copy:
