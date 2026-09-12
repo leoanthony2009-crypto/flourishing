@@ -50,27 +50,50 @@ class ModelError extends Error {
   constructor(public status: number, public detail: string) { super(`anthropic ${status}`); }
 }
 
-async function callModel(model: string, user: string) {
+async function callModel(model: string, user: string, structured: boolean) {
+  const body: Record<string, unknown> = {
+    model,
+    // Room for adaptive thinking as well as the answer. The old 500 would have truncated
+    // mid-object on any model that thinks before it writes.
+    max_tokens: 4000,
+    system: AI_SYSTEM,
+    messages: [{ role: 'user', content: user }],
+    // Low effort suits a short, tightly specified rewrite, and keeps a principal from waiting.
+    output_config: structured
+      ? { effort: 'low', format: { type: 'json_schema', schema: OUTPUT_SCHEMA } }
+      : { effort: 'low' },
+  };
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({
-      model,
-      // Room for adaptive thinking as well as the answer. The old 500 would have truncated
-      // mid-object on any model that thinks before it writes.
-      max_tokens: 4000,
-      system: AI_SYSTEM,
-      messages: [{ role: 'user', content: user }],
-      // Low effort suits a short, tightly specified rewrite, and keeps a principal from
-      // waiting. The schema is what guarantees the shape.
-      output_config: { effort: 'low', format: { type: 'json_schema', schema: OUTPUT_SCHEMA } },
-    }),
+    body: JSON.stringify(body),
   });
   if (!r.ok) throw new ModelError(r.status, (await r.text().catch(() => '')).slice(0, 300));
   const j = await r.json();
   if (j.stop_reason === 'refusal') throw new ModelError(200, 'refusal');
   if (j.stop_reason === 'max_tokens') throw new ModelError(200, 'max_tokens');
-  return (j.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text ?? '').join('');
+  const text = (j.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text ?? '').join('');
+  // Structured mode returns the object verbatim. Plain mode may wrap it in a sentence, so fall
+  // back to pulling the outermost object out — the behaviour this code had throughout.
+  if (structured) return text;
+  const m = text.match(/\{[\s\S]*\}/);
+  return m ? m[0] : text;
+}
+
+// Ask for a guaranteed shape first, and drop to plain mode only if the API rejects the request
+// outright. Structured outputs could not be exercised here — there is no key in this
+// environment to call the real API with — so a 400 must degrade to something that works rather
+// than take the whole feature down the moment a key is finally set.
+async function ask(model: string, user: string) {
+  try {
+    return await callModel(model, user, true);
+  } catch (e) {
+    if (e instanceof ModelError && e.status === 400) {
+      console.error('structured output refused, retrying plain', model, e.detail);
+      return await callModel(model, user, false);
+    }
+    throw e;
+  }
 }
 
 // Why it failed, in a form the client can say something honest about. Without this an unset
@@ -148,7 +171,7 @@ serve(async (req) => {
   let lastErr: unknown = null;
   for (const model of MODELS) {
     try {
-      const d = JSON.parse(await callModel(model, userMsg));
+      const d = JSON.parse(await ask(model, userMsg));
       if (d?.tailored === false) {
         await settle('declined', model);
         return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') });
