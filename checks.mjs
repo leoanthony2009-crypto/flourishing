@@ -43,6 +43,17 @@ for (const dead of ['PAST', 'CURRENT', 'DEMO_BASE_POINTS', 'window.claude', 'sta
   check(`no reference to ${dead}`, !new RegExp(`(?<![\\w$.'"-])${dead.replace('.', '\\.')}(?![\\w$])`).test(code));
 }
 
+// 4b. Copy from the prototype that is now simply untrue. The Account sheet told principals
+//     their data was "seeded demo data" held "on this device" — it is in Supabase, scoped to
+//     their school by RLS. A privacy promise is worth nothing if the app contradicts it two
+//     screens later. These strings are checked against the whole template, not just the logic.
+for (const stale of [
+  'seeded demo data',
+  'on this device use',
+  'Your school and this demo',
+  'Account and demo settings',
+]) check(`stale prototype copy gone: "${stale}"`, !src.includes(stale));
+
 // 5. Each row of the handoff's "Client integration points" table must be wired.
 for (const [what, needle] of [
   ['auth (magic link)', 'sendMagicLink'],

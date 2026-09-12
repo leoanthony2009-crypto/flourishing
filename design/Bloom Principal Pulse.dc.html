@@ -46,7 +46,7 @@ textarea{resize:none}
       </div>
       <div style="display:flex;align-items:center;gap:2px;flex:none;">
         <div style="font-size:12px;color:#666A80;white-space:nowrap;">{{ stepLabel }}</div>
-        <button type="button" onClick="{{ openDemo }}" aria-label="Account and demo settings" style="width:40px;height:40px;border-radius:999px;border:none;background:transparent;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.settings }}</button>
+        <button type="button" onClick="{{ openDemo }}" aria-label="Account settings" style="width:40px;height:40px;border-radius:999px;border:none;background:transparent;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.settings }}</button>
       </div>
     </div>
     <div style="display:flex;gap:6px;" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="{{ screen }}" aria-label="Weekly pulse progress">
@@ -575,7 +575,7 @@ textarea{resize:none}
                 </div>
               </sc-for>
             </div>
-            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Schools without a real submission on this device use seeded demo data. Switch school to submit as another principal and watch the network view change.</p>
+            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Only your own row names a theme. Every other school is counted in the network view and is never shown here against what they chose.</p>
           </div>
           <div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><div style="font-size:14px;font-weight:600;">Central-team inbox</div><div style="font-size:12px;color:#666A80;">{{ inboxCount }}</div></div>
@@ -594,6 +594,11 @@ textarea{resize:none}
             <a href="/inbox" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;min-height:44px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Open the full inbox</a>
             </sc-if>
             <sc-if value="{{ noInbox }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 14px;border-radius:12px;background:#F6F5F0;font-size:13px;color:#666A80;">No requests yet. Requests sent from “I need central-team support” appear here.</div></sc-if>
+          </div>
+          <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px;">About Bloom</div>
+            <a href="https://bloomtt.netlify.app/" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Our mission ↗</a>
+            <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Flourishing in Mission — the Bloom principals' resources site. Opens in a new tab.</p>
           </div>
           <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
             <button type="button" onClick="{{ resetDemo }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:14px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ resetLabel }}</button>
@@ -1112,7 +1117,7 @@ class Component extends DCLogic {
     const sheet = { eyebrow:'', title:'', isResource:sheetId==='resource', isTool:sheetId==='tool', isIdea:sheetId==='idea', isPeer:sheetId==='peer', isTalk:sheetId==='talk', isCentral:sheetId==='central', isPerk:sheetId==='perk', isShare:sheetId==='share', isDemo:sheetId==='demo', lines:more.resource.lines, body:'', peerCount:`${same} of ${nSchools} principals` };
     if (sheet.isResource) { sheet.eyebrow='Resource'; sheet.title=more.resource.title; }
     if (sheet.isShare) { sheet.eyebrow='Share with colleagues'; sheet.title=micro.title; }
-    if (sheet.isDemo) { sheet.eyebrow='Account'; sheet.title='Your school and this demo'; }
+    if (sheet.isDemo) { sheet.eyebrow='Account'; sheet.title='Your school'; }
     const role = (s.profile || {}).role || 'principal';
     const isCentral = role === 'central' || role === 'admin';
     const school = (s.schools || []).find(x => x.id === s.schoolId)
