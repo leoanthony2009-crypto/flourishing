@@ -455,6 +455,8 @@ textarea{resize:none}
 
     <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.lock }}<span><strong style="color:#14224A;font-weight:600;">Invited principals only.</strong> Sign-in works for the five Bloom school addresses and the central team. Your note stays with your school — it is never shown to colleagues or the central team.</span></div>
 
+    <a href="https://bloomtt.netlify.app/" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;font-size:14px;font-weight:600;color:#1E3A78;text-decoration:none;min-height:44px;line-height:44px;" style-hover="text-decoration:underline" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Our mission ↗</a>
+
     <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
     <button type="button" onClick="{{ sendLink }}" disabled="{{ authDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ authBtnBg }};color:{{ authBtnFg }};font-size:15px;font-weight:600;margin-top:auto;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ authBtnLabel }}</button>
     </sc-if>
