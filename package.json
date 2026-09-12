@@ -8,7 +8,7 @@
     "verify-build": "python3 build.py --verify",
     "check-bundle": "python3 build.py --check",
     "serve": "python3 -m http.server 8765 --directory deploy",
-    "smoke": "node smoke.mjs && node inbox-smoke.mjs && node inbox-render.mjs && node rescue.mjs && node link-safety.mjs && node app-signed-in.mjs && node sheets.mjs && node timezone.mjs",
+    "smoke": "node smoke.mjs && node inbox-smoke.mjs && node inbox-render.mjs && node rescue.mjs && node link-safety.mjs && node link-error.mjs && node app-signed-in.mjs && node sheets.mjs && node timezone.mjs",
     "e2e": "node e2e.mjs"
   },
   "devDependencies": {

@@ -15,6 +15,24 @@
   var CONFIG = window.BLOOM_SUPABASE || {};
   var client = null;
 
+  // The address a magic link lands on carries its outcome in the fragment. On success that is
+  // #access_token=…, which supabase-js consumes and strips. On failure it is
+  // #error=access_denied&error_code=otp_expired&…, which nothing read: the person clicked a
+  // link, arrived back at the sign-in screen, and was told nothing at all. Capture it here, at
+  // load, before anything else can clear it, and take it out of the address bar so a refresh
+  // does not resurrect an error the person has already dealt with.
+  var BOOT_ERROR = (function () {
+    var hash = String(window.location.hash || '').replace(/^#/, '');
+    var p = new URLSearchParams(hash);
+    var fromHash = !!(p.get('error') || p.get('error_code'));
+    if (!fromHash) p = new URLSearchParams(String(window.location.search || '').replace(/^\?/, ''));
+    if (!p.get('error') && !p.get('error_code')) return null;
+    try {
+      window.history.replaceState(null, '', window.location.pathname + (fromHash ? window.location.search : ''));
+    } catch (e) {}
+    return p;
+  })();
+
   function sb() {
     if (client) return client;
     if (!window.supabase || !CONFIG.url || !CONFIG.key) return null;
@@ -100,6 +118,22 @@
       });
       if (res.error) throw res.error;
       return true;
+    },
+    // The reason the link that just landed here did not sign anyone in, in plain words, or ''
+    // when the app was opened normally. Read once at load; safe to call at any time after.
+    authUrlError: function () {
+      if (!BOOT_ERROR) return '';
+      var code = BOOT_ERROR.get('error_code') || BOOT_ERROR.get('error') || '';
+      if (/otp_expired|expired|invalid/i.test(code)) {
+        return 'That sign-in link has already been used or has expired. Enter your address and we’ll send a new one.';
+      }
+      if (/access_denied|unauthorized/i.test(code)) {
+        return 'That sign-in link was not accepted. Enter your address and we’ll send a new one.';
+      }
+      // URLSearchParams already decodes %20 and +, so this is the server's own sentence.
+      var d = (BOOT_ERROR.get('error_description') || '').trim();
+      return d ? d.charAt(0).toUpperCase() + d.slice(1) + '.'
+               : 'That sign-in link didn’t work. Enter your address and we’ll send a new one.';
     },
     signOut: async function () {
       var c = await ready(); if (!c) return;
