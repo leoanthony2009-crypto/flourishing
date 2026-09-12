@@ -91,7 +91,7 @@ npm run build          # rebuild deploy/index.html from design/
 npm run verify-build   # assert the transform reproduces the originally shipped bundle
 npm run check-bundle   # assert the committed bundle matches design/
 npm run serve          # http://127.0.0.1:8765
-npm run smoke          # nine Playwright suites (needs `npm run serve` in another shell)
+npm run smoke          # ten Playwright suites (needs `npm run serve` in another shell)
 ```
 
 `npm run smoke` drives the built bundle in a real browser. Only `BloomAPI`'s network calls are
@@ -105,6 +105,7 @@ stubbed; the component, its state and the whole template are the real thing.
 | `rescue.mjs` | the "the link didn't work" paste flow and its error copy |
 | `link-safety.mjs` | the **real** `completeSignIn` against foreign links and tokens |
 | `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
+| `staff-signin.mjs` | the `?staff=1` password route: hidden by default, real session when used |
 | `app-signed-in.mjs` | all four steps as a signed-in principal |
 | `sheets.mjs` | every support sheet, the urgent request, the PDF export |
 | `timezone.mjs` | the week written is a Monday from UTC-11 to UTC+14 |
@@ -341,7 +342,24 @@ Then, to bring people on:
    with the right school and role, for anyone who is. Both halves verified against the live
    API — an unlisted address gets `500` with **zero** `auth.users` rows created.
 
-5. **Custom SMTP — the one thing that will actually stop the pilot.** Authentication →
+5. **Testing without waiting on the mailer.** Open
+   `https://flourishing-sage.vercel.app/?staff=1` and a **Central-team password** field
+   appears under the email box. It is not a bypass: it calls Supabase's ordinary password
+   grant, so the result is a normal session and the caller's role and every RLS policy apply
+   exactly as they do after a magic link. Only accounts that have been given a password can
+   use it, and no principal has one — `leoanthony2009@gmail.com` is the only account with a
+   password set.
+
+   Without `?staff=1` the field is not rendered at all, so nobody on the pilot ever sees it.
+   `staff-signin.mjs` asserts both halves.
+
+   Two things worth knowing. Supabase's password grant was already enabled project-wide — it
+   is what the end-to-end probes have been using all along — so this adds a front door to an
+   existing entrance, not a new one. And the password lives only in `auth.users`, hashed; it
+   is not in this repo. Change it from Authentication → Users in the dashboard, or turn the
+   whole route off by deleting the `staffMode` block from the design file and rebuilding.
+
+6. **Custom SMTP — the one thing that will actually stop the pilot.** Authentication →
    Emails → SMTP Settings, with Resend, Postmark or SES.
 
    This is not theoretical: during testing the built-in mailer returned **`429` on the second
@@ -353,5 +371,5 @@ Then, to bring people on:
    just now. Wait a few minutes and try again" rather than blaming the allow-list — but that
    is damage control, not a fix.
 
-6. **Perks** stay in "Term 2 preview" while every row has `active = false`. Set `active = true`
+7. **Perks** stay in "Term 2 preview" while every row has `active = false`. Set `active = true`
    when a partner signs; no client change is needed.

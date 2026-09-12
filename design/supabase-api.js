@@ -135,6 +135,18 @@
       return d ? d.charAt(0).toUpperCase() + d.slice(1) + '.'
                : 'That sign-in link didn’t work. Enter your address and we’ll send a new one.';
     },
+    // Password sign-in, for the central team testing the app without waiting on the mailer.
+    // Not a bypass of anything: it produces an ordinary Supabase session for that user, so
+    // their role and every RLS policy apply exactly as they do after a magic link. Only
+    // accounts that have been given a password can use it, and principals have none.
+    signInWithPassword: async function (email, password) {
+      var c = await ready(); if (!c) throw new Error('offline');
+      var res = await c.auth.signInWithPassword({
+        email: String(email || '').trim(), password: String(password || ''),
+      });
+      if (res.error) throw res.error;
+      return res.data;
+    },
     signOut: async function () {
       var c = await ready(); if (!c) return;
       await c.auth.signOut();
