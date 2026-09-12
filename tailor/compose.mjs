@@ -10,7 +10,15 @@ export const TOPICS = new Set(['workload','staffing','teaching','behaviour','att
 // an otherwise natural-language brief; these are the words the app itself uses on screen.
 const IMPACT = { little: 'a little', quite_a_bit: 'quite a bit', a_lot: 'a lot' };
 
-export const str = (v, max = 400) => String(v ?? '').trim().slice(0, max);
+export const str = (v, max = 400) => {
+  const t = String(v ?? '').trim();
+  if (t.length <= max) return t;
+  // slice() counts UTF-16 code units, so a cut can land between the two halves of a surrogate
+  // pair and leave a lone surrogate behind. That is not valid UTF-8 once the request is
+  // encoded, so a principal whose note ran long and ended in an emoji got their tailor request
+  // rejected or silently mangled. Slice by code point instead.
+  return [...t].slice(0, max).join('');
+};
 export const list = (v, n, max = 200) =>
   Array.isArray(v) ? v.slice(0, n).map((x) => str(x, max)).filter(Boolean) : [];
 

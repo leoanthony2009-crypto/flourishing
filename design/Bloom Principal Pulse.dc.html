@@ -8,8 +8,32 @@
 <body>
 <x-dc>
 <helmet>
+<!-- The bundler boots with document.documentElement.replaceWith(doc.documentElement), which
+     swaps the whole <html> for one built from this template. Anything that lives only in the
+     outer <head> is destroyed the moment JavaScript runs: the page title, the manifest and
+     every icon were, leaving a tab with no name, a screen reader with nothing to announce,
+     and "Add to Home Screen" unavailable on the one app meant to be a weekly phone habit.
+     Helmet content survives the swap, so it belongs here. -->
+<title>Bloom Principal Pulse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F6F5F0">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bloom Pulse">
+<script>
+// <html lang> cannot be declared here — this block lands inside <head> — and the replacement
+// documentElement carries no attributes, so it is set after the swap. Screen readers need it
+// to choose a voice; without it they guess, and Trinidad & Tobago English is not the guess.
+(function () {
+  var set = function () { if (document.documentElement) document.documentElement.lang = 'en-TT'; };
+  set();
+  document.addEventListener('DOMContentLoaded', set);
+  window.addEventListener('load', set);
+})();
+</script>
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script src="./image-slot.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
@@ -46,7 +70,7 @@ textarea{resize:none}
       </div>
       <div style="display:flex;align-items:center;gap:2px;flex:none;">
         <div style="font-size:12px;color:#666A80;white-space:nowrap;">{{ stepLabel }}</div>
-        <button type="button" onClick="{{ openDemo }}" aria-label="Account settings" style="width:40px;height:40px;border-radius:999px;border:none;background:transparent;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.settings }}</button>
+        <button type="button" onClick="{{ openDemo }}" aria-label="Account settings" style="width:44px;height:44px;border-radius:999px;border:none;background:transparent;color:#14224A;display:flex;align-items:center;justify-content:center;margin-right:-8px;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.settings }}</button>
       </div>
     </div>
     <div style="display:flex;gap:6px;" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="{{ screen }}" aria-label="Weekly pulse progress">
@@ -826,6 +850,11 @@ class Component extends DCLogic {
 
   // bloom-pulse-shared -> shared_resources (per school, RLS-scoped).
   async addShared(item) {
+    if (this._sharing) return;
+    this._sharing = true;
+    try { await this._addShared(item); } finally { this._sharing = false; }
+  }
+  async _addShared(item) {
     const s = this.state; if (!s.schoolId || !s.session) return;
     this.setState({ shared: [{ ...item, id:null }, ...(s.shared || [])].slice(0, 20), sharedError:'' });
     try { await BloomAPI.addShared({ schoolId:s.schoolId, userId:s.session.user.id, topic:item.topic, title:item.title, tryIt:item.tryIt, text:item.text }); }
@@ -1209,7 +1238,12 @@ class Component extends DCLogic {
       showSubmitHint: !canSubmit || !!s.submitError || !s.schoolId,
       talkMailto: `mailto:?subject=${encodeURIComponent('A short conversation this week')}&body=${encodeURIComponent(talkMessage)}`,
       // bloom-pulse-submissions -> pulses upsert. Points are awarded by the insert trigger.
-      submit: async () => { if (!canSubmit || s.submitting || !s.session || !s.schoolId) return;
+      // s.submitting is a render-time snapshot and setState is asynchronous, so several taps
+      // landing inside one frame all read false and all get through — five taps produced five
+      // writes. The disabled attribute does not help either; it only applies after the
+      // re-render. this._writing is set synchronously, which is what actually closes the gap.
+      submit: async () => { if (!canSubmit || this._writing || s.submitting || !s.session || !s.schoolId) return;
+        this._writing = true;
         // Read the week now, not at render time: a tab left open from Friday to Monday would
         // otherwise upsert onto last week's row and overwrite that pulse.
         const wk = this.weekISO();
@@ -1222,6 +1256,7 @@ class Component extends DCLogic {
             this.refreshNetwork(); this.refreshRewards();
           });
         } catch (e) { this.setState({ submitting:false, submitError:'Couldn’t save your pulse. Check your connection and try again.' }); }
+        finally { this._writing = false; }
       },
       skip: () => this.setState({ skipped:true, saved:false, justSaved:false, screen:2 }),
       savedMsg: 'Pulse saved for this week — thank you.',
@@ -1292,7 +1327,12 @@ class Component extends DCLogic {
       cTypeLabel: (SUPPORT_TYPES.find(t => t.id===s.cType)||{label:''}).label.toLowerCase(), cRef:s.cRef,
       // bloom-pulse-requests -> support_requests. Only the context the principal chose to
       // send reaches the central team; pulses.note never does.
-      sendCentral: async () => { if (!s.cType || s.cSending || !s.session || !s.schoolId) return;
+      // Same race as submit, with worse consequences: insertRequest is a plain insert and each
+      // attempt mints a new random ref, so rapid taps do not collide — they land as separate
+      // requests. Five taps on an urgent request meant five identical alarms reaching the
+      // central team from one school.
+      sendCentral: async () => { if (!s.cType || this._sendingCentral || s.cSending || !s.session || !s.schoolId) return;
+        this._sendingCentral = true;
         this.setState({ cSending:true, cError:'' });
         const wk = this.weekISO();
         const stem = `BP-${wk.replace(/-/g,'').slice(2)}-`;
@@ -1305,12 +1345,14 @@ class Component extends DCLogic {
               topic: s.topic || s.savedTopic || 'other', impact: s.impact || null,
               context:s.cContext, help:s.cHelp, userId:s.session.user.id });
             this.setState({ cSent:true, cRef:ref, cSending:false }, () => this.refreshRequests());
+            this._sendingCentral = false;
             return;
           } catch (e) {
             if (e && e.code === '23505') continue;   // ref collided, take another
             break;
           }
         }
+        this._sendingCentral = false;
         this.setState({ cSending:false,
           cError:'Couldn’t send that request. Check your connection and try again — or call the central team on +1 868-607-2326.' });
       },
