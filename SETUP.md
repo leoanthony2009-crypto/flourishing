@@ -139,6 +139,30 @@ internet — this sandbox itself blocks `*.supabase.co` and `*.vercel.app`)
   confirms the preflight handling added to both edge functions (the handoff versions answered
   `OPTIONS` with 405).
 
+### End to end, as real signed-in users
+
+The strongest check of the lot, and the one that matters most. Three throwaway accounts (two
+principals at different schools, one central) were created, signed in for real JWTs, and used
+to drive the **live** REST API, RPC and edge functions exactly as the browser does. All test
+data was deleted afterwards; the database holds only the reference rows and the owner account.
+
+| What | Result |
+|---|---|
+| Principal submits a pulse | `201`, row written through RLS |
+| **Minimum-cell rule with real data** | 3 schools in: `included: 3`, `current: [{workload, 2}]`, `suppressed: 1`. The theme only one school picked is counted but **never named**, and is absent from `four_weeks` entirely |
+| Principal reads `pulses` | sees **only their own school's** row |
+| **Central reads `pulses`** | **zero rows** — the note-privacy guarantee, against a real central-team token |
+| Points | note-writer `pulse 10 + note 5`; the other `pulse 10` |
+| Principal files a support request | `201` |
+| Central reads requests | sees it, with the context the principal chose to send |
+| A *different* principal reads requests | zero rows |
+| Central sets `status` | `200`, updated |
+| Principal tries to set `status` | zero rows — blocked by RLS |
+| `redeem` with no partner signed | `404 perk not available` |
+| **`tailor` on safeguarding** | `declined` in **1 ms** — the hard block fires before any model call, so it holds even with no API key set |
+| `tailor` on a normal topic, no key | `{status:'error'}`, which the client renders as the default idea |
+| `ai_tailor_log` | logged `declined` and `error` with school and latency, and its columns cannot hold a note or output |
+
 ## Hosting
 
 `vercel.json` at the repository root configures the whole deploy, so no dashboard settings are
