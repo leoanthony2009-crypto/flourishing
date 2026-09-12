@@ -858,19 +858,28 @@ class Component extends DCLogic {
   // window.claude.complete -> POST /functions/v1/tailor. The edge function holds the API key,
   // enforces the 6-a-day limit, blocks safeguarding and re-runs the same output validation
   // server-side, so the client only has to render the verdict it returns.
-  async refine(key, topic, impact, note, base, more) {
+  async refine(key, topic, impact, note, base, more, signal) {
     this.setState({ ai:{ key, status:'busy', data:null, error:'' } });
     const fail = (error) => { if (this.state.ai.key === key) this.setState({ ai:{ key, status:'error', data:null, error } }); };
     try {
       const r = await BloomAPI.tailor({
         topic: topic.id, impact: impact ? impact.id : null, note, week_start: this.weekISO(),
         base: { label:topic.label, title:base.title, body:base.body, tryIt:base.tryIt, prompt:base.prompt, evidence:base.evidence, source:base.source, local:base.local },
-        more: { checklist:more.checklist, idea:more.idea },
+        // peer and resource were in the evidence base all along and never sent, so "what
+        // colleagues do" was missing from a feature whose whole point is that it is not
+        // generic advice. signal carries the rest: how many schools are on this theme, how
+        // long it has run here, and what this school has already saved.
+        more: { checklist:more.checklist, idea:more.idea, peer:more.peer, resource:more.resource },
+        signal,
       });
       if (this.state.ai.key !== key) return;
       if (r && r.status === 'done' && r.data) { this.setState({ ai:{ key, status:'done', data:r.data, error:'' } }); return; }
       if (r && r.status === 'declined') { fail(`Not enough to tailor safely: ${String(r.reason || 'add a sentence of context on step 1 and try again').replace(/[.!]+$/, '')}. The default idea still applies.`); return; }
       if (r && r.status === 'rejected') { fail('The tailored version added claims that aren’t in the evidence, so it was discarded. The default idea still applies.'); return; }
+      // The server now says why. Without this, an unconfigured key read as a network wobble
+      // and a principal retried all week waiting for something that was never switched on.
+      if (r && r.reason === 'not_configured') { fail('AI tailoring isn’t switched on for Bloom yet. The evidence-based idea below still applies.'); return; }
+      if (r && r.reason === 'busy') { fail('The tailoring service is busy just now. Try again in a moment — the default idea still applies.'); return; }
       fail('Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
     } catch (e) {
       fail(e && e.status === 403 ? 'Tailoring is for school accounts. The evidence-based default is shown instead.'
@@ -1241,7 +1250,16 @@ class Component extends DCLogic {
       aiHint: aiLocked ? 'Safeguarding ideas are not rewritten by AI.' : aiDone ? 'The idea above now reflects your theme, impact and note.' : noteTrim ? 'Rewrites the idea around your note, using only the evidence and T&T context shown above — no new claims.' : 'Works best with a note. Add a sentence on step 1 about what’s actually happening; without it the AI will decline rather than guess.',
       aiBtnBg: aiBusy ? '#5A6A9A' : GREEN, aiBtnFg: PAPER,
       aiBtnLabel: aiBusy ? 'Tailoring…' : aiDone ? 'Tailor again' : aiError ? 'Try again' : 'Tailor this idea',
-      aiRefine: () => { if (aiBusy || aiLocked) return; this.refine(aiKey, topic, impact, noteTrim, baseMicro, more); },
+      aiRefine: () => { if (aiBusy || aiLocked) return; this.refine(aiKey, topic, impact, noteTrim, baseMicro, more, {
+        // Counts already on screen and already minimum-cell suppressed; own-school history and
+        // library. Nothing here is another school's note.
+        networkCount: cur[topic.id] || 0,
+        schoolsTotal: nSchools,
+        trend: (cur[topic.id] || 0) > (prev[topic.id] || 0) ? 'rising'
+             : (cur[topic.id] || 0) < (prev[topic.id] || 0) ? 'falling' : 'steady',
+        weeksRunning: [0,1,2,3].filter(i => ownAt[weekAt(i)] === topic.id).length,
+        ownLibrary: (s.shared || []).filter(x => x.topic === topic.id).map(x => x.title).slice(0, 4),
+      }); },
       aiGrounding: aiDone ? (s.ai.data.grounding || baseMicro.source) : '',
       aiReset: () => this.setState({ ai:{ key:null, status:'idle', data:null, error:'' } }),
       perksCta: s.saved ? 'See my points & perks' : 'See perks',
