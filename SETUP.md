@@ -109,6 +109,7 @@ stubbed; the component, its state and the whole template are the real thing.
 | `mission-link.mjs` | the **Our mission** link: href, `rel="noopener noreferrer"`, 44px target |
 | `a11y.mjs` | what survives the documentElement swap, names, targets, dialog focus |
 | `edge-cases.mjs` | double-submit, hostile open text, session lost mid-writing |
+| `more-help.mjs` | every More help sheet cites its evidence; the external AI declares its limits |
 
 `npm run check` also runs two suites against the edge function's own modules under Node, so
 they test the deployed code rather than a copy:
@@ -333,6 +334,44 @@ the control that opened it.
 Note on WCAG 2.2 SC 3.3.8 *Accessible Authentication*: the magic link passes it outright — there
 is no password to recall or transcribe. The `?staff=1` password route is a separate, deliberate
 path for the central team, not the one principals use.
+
+### Is "More help" grounded?
+
+"More help" is where a principal goes when the default idea was not enough, so everything it
+offers has to be traceable.
+
+**The practical sheets now cite their evidence.** The resource planner, the checklist and the
+second idea are all derived from the same research as the main card — which shows its source —
+but the sheets showed none, so the most actionable content in the app read as unattributed
+advice. Each now carries a *Why this works* line and its citation.
+
+**All fourteen evidence claims were reviewed against their sources.** Thirteen hold up:
+Robinson, Lloyd & Rowe (2008) for the 0.84 effect size on leading teacher learning, Bryk &
+Schneider (2002) on relational trust, Bandura (1997) and Tschannen-Moran & Woolfolk Hoy (2001)
+on self-efficacy, Epstein (2011) on family engagement, and the EEF guidance reports — two of
+which were fetched live and returned exactly the cited titles.
+
+One did not. The staffing claim read *"how staff are deployed explains more variation in
+outcomes than headcount alone"*, cited to Leithwood, Harris & Hopkins (2020), *Seven strong
+claims about successful school leadership revisited*. That paper is real and correctly cited as
+an artefact, but it is about leadership practices and their largely **indirect** effects — it
+does not establish a deployment-versus-headcount comparison. The claim was reworded to state
+what the source actually supports, rather than a new source being invented to fit the claim.
+
+Reviewed from knowledge, not from fetching each paper: journal sites (SAGE, Taylor & Francis)
+block automated requests, so the EEF reports are the only ones independently confirmed here.
+A subject-matter reviewer should still read the fourteen before the pilot widens.
+
+**The one AI in the section is not Bloom's.** *Ask POUI GPT* opens a third-party ChatGPT GPT
+(confirmed live — "ChatGPT · POUI GPT 1.3"). Everything above it in that section is grounded:
+the ideas cite their evidence, the tailored version may use only that evidence, safeguarding is
+blocked before any model call, and no note leaves Bloom. **None of that holds on the other side
+of that link**, and a principal had no way to tell from the button. It now says so: outside
+Bloom's evidence base, cannot see your pulse, anything typed there leaves Bloom, and anything
+urgent or child-protection related belongs in *I need central-team support* instead.
+
+`checks.mjs` enforces a floor — every theme must state its evidence and cite a source carrying
+a year. That cannot tell whether a source supports its claim, only that one was supplied.
 
 ## Deliberately not built
 

@@ -54,6 +54,22 @@ for (const stale of [
   'Account and demo settings',
 ]) check(`stale prototype copy gone: "${stale}"`, !src.includes(stale));
 
+// 4c. Every theme must carry its evidence AND a citation a reader could check. "More help"
+//     shows this material to principals as practical advice, so an entry without a source is
+//     advice presented as fact. A floor, not a proof of accuracy: it cannot tell whether the
+//     source supports the claim, only that one was supplied.
+const topicIds = ['workload','staffing','teaching','behaviour','attendance','safeguarding',
+  'parents','send','culture','confidence','resources','change','data','other'];
+const micro = src.slice(src.indexOf('const MICRO'));
+let missingEvidence = [], missingYear = [];
+for (const t of topicIds) {
+  const m = micro.match(new RegExp(`\\n  ${t}:\\{[\\s\\S]*?evidence:'((?:[^'\\\\]|\\\\.)*)',source:'((?:[^'\\\\]|\\\\.)*)'`));
+  if (!m || !m[1].trim() || !m[2].trim()) { missingEvidence.push(t); continue; }
+  if (!/\b(19|20)\d{2}\b/.test(m[2])) missingYear.push(t);
+}
+check('every theme states its evidence and cites a source', missingEvidence.length === 0, 'missing: ' + missingEvidence.join(', '));
+check('every citation carries a year a reader could look up', missingYear.length === 0, 'no year: ' + missingYear.join(', '));
+
 // 5. Each row of the handoff's "Client integration points" table must be wired.
 for (const [what, needle] of [
   ['auth (magic link)', 'sendMagicLink'],
