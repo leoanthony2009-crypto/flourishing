@@ -57,7 +57,8 @@
   .meta { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
   .field { margin-top:12px; }
   .field dt { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:3px; }
-  .field dd { margin:0; font-size:15px; line-height:1.5; white-space:pre-wrap; }
+  .field dd { margin:0; font-size:15px; line-height:1.5; white-space:pre-wrap;
+    overflow-wrap:anywhere; word-break:break-word; }
   .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center;
     margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
   select { min-height:44px; padding:0 12px; border-radius:12px; border:1.5px solid var(--lav-2);
@@ -73,6 +74,8 @@
   footer { border-top:1px solid var(--line); background:var(--paper); margin-top:40px; }
   .foot { max-width:940px; margin:0 auto; padding:20px 16px; font-size:13px; line-height:1.6; color:var(--muted); }
   .foot strong { color:var(--ink); }
+  /* These are crisis numbers; they must be the easiest things here to tap. */
+  .foot a { display:inline-block; min-height:44px; line-height:44px; padding:0 6px; font-weight:600; }
 
   @media (max-width:520px) { .req-top { flex-direction:column; gap:6px; } }
   @media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }
@@ -127,9 +130,11 @@
       <button class="chip" data-filter="in_progress" aria-pressed="false">In progress</button>
       <button class="chip" data-filter="closed" aria-pressed="false">Closed</button>
       <button class="chip" data-filter="all" aria-pressed="false">All</button>
-      <button id="refresh" class="btn-ghost" style="margin-left:auto;">Refresh</button>
     </div>
-    <p id="count" class="muted" style="font-size:13px;margin:0 0 14px;"></p>
+    <div style="display:flex;justify-content:flex-end;margin:-6px 0 8px;">
+      <button id="refresh" class="btn-ghost">Refresh</button>
+    </div>
+    <p id="count" class="muted" role="status" aria-live="polite" style="font-size:13px;margin:0 0 14px;"></p>
     <div id="list"></div>
     <p id="empty" class="muted" hidden style="padding:24px;text-align:center;">No requests with this status.</p>
   </section>
@@ -167,12 +172,18 @@
     confidence:'Staff confidence', resources:'Resources & budget', change:'Leading change',
     data:'Data & assessment', other:'Something else',
   };
+  // Only the columns this page needs. select('*') would silently ship any column added to
+  // support_requests later — a private triage note, say — down to the browser.
+  var COLS = 'id,ref,school_id,week_start,type,topic,impact,context,help,status,assigned_to,created_at';
+  var PAGE = 200;
 
   var $ = function (id) { return document.getElementById(id); };
-  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
-    return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]; }); };
+  // Escapes the single quote too. Every attribute here is double-quoted today, but a later
+  // single-quoted one would otherwise be a live injection with no other code change.
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+    return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]; }); };
 
-  var state = { profile:null, schools:{}, rows:[], filter:'open' };
+  var state = { profile:null, schools:{}, rows:[], filter:'open', loadFailed:false, booted:false };
 
   function show(which) {
     ['signin','denied','inbox'].forEach(function (id) { $(id).hidden = id !== which; });
@@ -213,14 +224,25 @@
   $('signout-denied').addEventListener('click', signOut);
 
   // ---- session -------------------------------------------------------------
+  // supabase-js fires INITIAL_SESSION on subscribe and TOKEN_REFRESHED roughly hourly.
+  // Without the guard each one re-ran the whole boot and rebuilt the list under the reader.
   async function boot(session) {
-    if (!session) { show('signin'); $('who').textContent = ''; return; }
+    if (!session) { show('signin'); $('who').textContent = ''; state.booted = false; return; }
+    if (state.booted) return;
+    state.booted = true;
+
     var p = await sb.from('profiles').select('user_id, email, role, display_name').eq('user_id', session.user.id).maybeSingle();
+    if (p.error) {                       // a blip is not an access decision
+      state.booted = false;
+      $('signin-err').textContent = 'Couldn’t reach Bloom just now. Reload to try again.';
+      $('signin-err').hidden = false;
+      show('signin');
+      return;
+    }
     var profile = p.data;
-    // Only central and admin belong here; a principal's own requests are in the app.
     if (!profile || (profile.role !== 'central' && profile.role !== 'admin')) { show('denied'); return; }
     state.profile = profile;
-    $('who').innerHTML = esc(profile.email) + ' · <button id="signout" class="btn-ghost" style="min-height:32px;padding:0 12px;">Sign out</button>';
+    $('who').innerHTML = esc(profile.email) + ' · <button id="signout" class="btn-ghost" style="min-height:44px;padding:0 12px;">Sign out</button>';
     $('signout').addEventListener('click', signOut);
     show('inbox');
 
@@ -233,11 +255,26 @@
   sb.auth.getSession().then(function (r) { boot(r.data.session); }).catch(function () { show('signin'); });
 
   // ---- inbox ---------------------------------------------------------------
+  // Urgent requests are fetched separately and unbounded. Taking the newest 200 and *then*
+  // sorting urgent to the top would hide an open urgent request older than those 200.
   async function load() {
-    var q = sb.from('support_requests').select('*').order('created_at', { ascending: false }).limit(200);
-    var r = await q;
-    if (r.error) { $('count').textContent = 'Couldn’t load requests: ' + r.error.message; return; }
-    state.rows = r.data || [];
+    $('refresh').disabled = true;
+    var urgent = sb.from('support_requests').select(COLS).eq('type', 'urgent').order('created_at', { ascending: false });
+    var rest   = sb.from('support_requests').select(COLS).neq('type', 'urgent').order('created_at', { ascending: false }).limit(PAGE);
+    var res = await Promise.all([urgent, rest]);
+    $('refresh').disabled = false;
+
+    if (res[0].error || res[1].error) {
+      state.loadFailed = true;
+      // The stale list must not sit there looking current.
+      state.rows = [];
+      render();
+      $('count').textContent = 'Couldn’t load requests: ' + ((res[0].error || res[1].error).message);
+      return;
+    }
+    state.loadFailed = false;
+    state.truncated = (res[1].data || []).length === PAGE;
+    state.rows = (res[0].data || []).concat(res[1].data || []);
     render();
   }
 
@@ -248,14 +285,14 @@
   }
 
   function render() {
-    var rows = visible();
-    // Urgent first, then newest.
-    rows = rows.slice().sort(function (a, b) {
+    var rows = visible().slice().sort(function (a, b) {
       if ((a.type === 'urgent') !== (b.type === 'urgent')) return a.type === 'urgent' ? -1 : 1;
-      return a.created_at < b.created_at ? 1 : -1;
+      // Must return 0 for equal, or two same-second rows can swap on every render.
+      return a.created_at === b.created_at ? 0 : (a.created_at < b.created_at ? 1 : -1);
     });
     $('count').textContent = rows.length + (rows.length === 1 ? ' request' : ' requests')
-      + (state.filter === 'all' ? '' : ' · ' + state.filter.replace('_', ' '));
+      + (state.filter === 'all' ? '' : ' · ' + state.filter.replace('_', ' '))
+      + (state.truncated ? ' · showing the newest ' + PAGE + ' plus all urgent' : '');
     $('empty').hidden = rows.length > 0;
     $('list').innerHTML = rows.map(card).join('');
     $('list').querySelectorAll('select[data-status]').forEach(function (el) {
@@ -270,6 +307,7 @@
     var urgent = x.type === 'urgent';
     var when = new Date(x.created_at).toLocaleDateString('en-TT', { day:'numeric', month:'short', year:'numeric' });
     var mine = state.profile && x.assigned_to === state.profile.user_id;
+    var owner = !x.assigned_to ? 'Unassigned' : mine ? 'Assigned to you' : 'Assigned to a colleague';
     return '<article class="req' + (urgent ? ' urgent' : '') + '">'
       + '<div class="req-top">'
         + '<span class="ref">' + esc(x.ref) + ' · ' + esc(state.schools[x.school_id] || 'Unknown school') + '</span>'
@@ -279,35 +317,59 @@
         + '<span class="tag' + (urgent ? ' urgent' : '') + '">' + esc(TYPES[x.type] || x.type) + '</span>'
         + '<span class="tag">' + esc(TOPICS[x.topic] || x.topic) + '</span>'
         + (x.impact ? '<span class="tag">Affecting them ' + esc(IMPACT[x.impact] || x.impact) + '</span>' : '')
+        + '<span class="tag">' + esc(owner) + '</span>'
       + '</div>'
       + (x.context ? '<dl class="field"><dt>Context the principal sent</dt><dd>' + esc(x.context) + '</dd></dl>' : '')
       + (x.help ? '<dl class="field"><dt>What would help</dt><dd>' + esc(x.help) + '</dd></dl>' : '')
       + '<div class="controls">'
+        // Names carry the ref, or a screen reader's control list reads "Status, Status, Status…"
         + '<label for="st-' + esc(x.id) + '" style="font-size:13px;font-weight:600;">Status</label>'
-        + '<select id="st-' + esc(x.id) + '" data-status="' + esc(x.id) + '">'
+        + '<select id="st-' + esc(x.id) + '" data-status="' + esc(x.id) + '" aria-label="Status for ' + esc(x.ref) + '">'
           + Object.keys(STATUS).map(function (k) {
               return '<option value="' + k + '"' + (x.status === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('')
         + '</select>'
-        + '<button class="btn-ghost" data-claim="' + esc(x.id) + '"' + (mine ? ' disabled' : '') + '>'
+        + '<button class="btn-ghost" data-claim="' + esc(x.id) + '" aria-label="'
+          + (mine ? 'Already assigned to you: ' : 'Assign to me: ') + esc(x.ref) + '"' + (mine ? ' aria-disabled="true"' : '') + '>'
           + (mine ? 'Assigned to you' : x.assigned_to ? 'Reassign to me' : 'Assign to me') + '</button>'
-        + '<span class="muted" style="font-size:12px;" id="msg-' + esc(x.id) + '"></span>'
+        + '<span class="muted" style="font-size:12px;" id="msg-' + esc(x.id) + '" role="status" aria-live="polite"></span>'
       + '</div>'
     + '</article>';
   }
 
+  // Updates only the affected card. A whole-list re-render used to revert any other card
+  // whose own update was still in flight, and threw away keyboard focus.
   async function patch(id, fields, el, okText) {
     var msg = $('msg-' + id);
-    el.disabled = true;
-    var r = await sb.from('support_requests').update(fields).eq('id', id).select().single();
-    el.disabled = false;
-    if (r.error) { if (msg) { msg.textContent = 'Not saved: ' + r.error.message; } return; }
-    var i = state.rows.findIndex(function (x) { return x.id === id; });
-    if (i > -1) state.rows[i] = r.data;
-    if (msg) { msg.textContent = okText; setTimeout(function () { render(); }, 900); }
+    var row = state.rows.find(function (x) { return x.id === id; });
+    var before = row ? { status: row.status, assigned_to: row.assigned_to } : null;
+    if (msg) msg.textContent = 'Saving…';
+
+    var r = await sb.from('support_requests').update(fields).eq('id', id).select(COLS).single();
+
+    if (r.error || !r.data) {
+      // Put the control back to what the server still holds, so the card never shows a
+      // state that was not saved.
+      if (before && el && el.tagName === 'SELECT') el.value = before.status;
+      if (msg) msg.textContent = 'Not saved: ' + ((r.error && r.error.message) || 'no permission');
+      return;
+    }
+    Object.assign(row, r.data);
+    if (msg) msg.textContent = okText;
+    // Refresh just this card's derived bits; leave the rest of the list and focus alone.
+    var btn = $('list').querySelector('button[data-claim="' + id + '"]');
+    if (btn) {
+      var mine = state.profile && row.assigned_to === state.profile.user_id;
+      btn.textContent = mine ? 'Assigned to you' : row.assigned_to ? 'Reassign to me' : 'Assign to me';
+      btn.setAttribute('aria-label', (mine ? 'Already assigned to you: ' : 'Assign to me: ') + row.ref);
+      if (mine) btn.setAttribute('aria-disabled', 'true'); else btn.removeAttribute('aria-disabled');
+    }
   }
 
   function setStatus(id, status, el) { patch(id, { status:status, updated_at:new Date().toISOString() }, el, 'Saved'); }
-  function claim(id, el) { patch(id, { assigned_to: state.profile.user_id, updated_at:new Date().toISOString() }, el, 'Assigned'); }
+  function claim(id, el) {
+    if (el.getAttribute('aria-disabled') === 'true') return;
+    patch(id, { assigned_to: state.profile.user_id, updated_at:new Date().toISOString() }, el, 'Assigned');
+  }
 
   $('refresh').addEventListener('click', load);
   document.querySelectorAll('.chip').forEach(function (c) {

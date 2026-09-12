@@ -480,6 +480,9 @@ textarea{resize:none}
         </div>
         <div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#F8F3E8;display:flex;align-items:center;gap:12px;">
           <span style="flex:1;font-size:13px;line-height:1.45;color:#14224A;"><strong style="font-weight:600;">{{ shareSavedTitle }}</strong><br>{{ shareSavedSub }}</span>
+          <sc-if value="{{ sharedError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;text-wrap:pretty;">{{ sharedErrorText }}</p>
+          </sc-if>
           <button type="button" onClick="{{ addToResources }}" disabled="{{ shareSaved }}" style="min-height:40px;padding:0 14px;border-radius:999px;border:none;background:{{ shareSaveBg }};color:{{ shareSaveFg }};font-size:13px;font-weight:600;white-space:nowrap;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ shareSaveLabel }}</button>
         </div>
       </sc-if>
@@ -586,6 +589,9 @@ textarea{resize:none}
           </sc-if>
           <sc-if value="{{ perk.notRedeemed }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex;justify-content:space-between;padding:12px 14px;border-radius:12px;background:#F0ECF6;font-size:14px;"><span style="color:#666A80;">Cost</span><span style="font-weight:600;">{{ perk.costLabel }}</span></div>
+            <sc-if value="{{ redeemError }}" hint-placeholder-val="{{ false }}">
+              <p role="alert" style="margin:0 0 8px;font-size:13px;line-height:1.45;color:#8A6614;text-wrap:pretty;">{{ redeemErrorText }}</p>
+            </sc-if>
             <button type="button" onClick="{{ redeemPerk }}" disabled="{{ perk.cantAfford }}" style="min-height:50px;border-radius:999px;border:none;background:{{ perk.btnBg }};color:{{ perk.btnFg }};font-size:15px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ perk.btnLabel }}</button>
             <sc-if value="{{ perk.confirming }}" hint-placeholder-val="{{ false }}"><div aria-live="polite" style="font-size:12px;line-height:1.5;color:#666A80;text-align:center;margin-top:-6px;">This spends {{ perk.costLabel }} and can’t be undone. Tap again to confirm.</div></sc-if>
             <sc-if value="{{ perksPreview }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;line-height:1.5;color:#666A80;text-align:center;margin-top:-6px;">Preview only — your points carry over to Term 2.</div></sc-if>
@@ -622,6 +628,9 @@ textarea{resize:none}
               <label for="central-help" style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">What would help most?</label>
               <textarea id="central-help" rows="2" maxLength="300" placeholder="e.g. a 20-minute call this week" value="{{ cHelp }}" onChange="{{ setCHelp }}" style="display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;line-height:1.45;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6"></textarea>
             </div>
+            <sc-if value="{{ cError }}" hint-placeholder-val="{{ false }}">
+              <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;text-wrap:pretty;">{{ cErrorText }}</p>
+            </sc-if>
             <button type="button" onClick="{{ sendCentral }}" disabled="{{ centralDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ centralBg }};color:{{ centralFg }};font-size:15px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">Send request</button>
             <p style="margin:0;font-size:12px;line-height:1.5;color:#666A80;">Only the central team sees this request. It is not part of the network view.</p>
             <a href="tel:+18686072326" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:999px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:15px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ ic.phone }}Call CEBM central team · +1 868-607-2326</a>
@@ -773,14 +782,17 @@ class Component extends DCLogic {
     // Session + server state. `schoolId` now comes from profiles.school_id, not localStorage.
     authStatus:'loading', email:'', authError:'', session:null, profile:null, schoolId:null,
     pasteOpen:false, pasteValue:'', pasteError:'', pasting:false,
+    // What the server holds, as distinct from what is currently being edited.
+    savedTopic:null, savedNote:'', myWeeks:[],
     schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
     submitting:false, submitError:'', cSending:false };
 
   // bloom-pulse-shared -> shared_resources (per school, RLS-scoped).
   async addShared(item) {
     const s = this.state; if (!s.schoolId || !s.session) return;
-    this.setState({ shared: [{ ...item, id:null }, ...(s.shared || [])].slice(0, 20) });   // optimistic
-    try { await BloomAPI.addShared({ schoolId:s.schoolId, userId:s.session.user.id, topic:item.topic, title:item.title, tryIt:item.tryIt, text:item.text }); } catch (e) {}
+    this.setState({ shared: [{ ...item, id:null }, ...(s.shared || [])].slice(0, 20), sharedError:'' });
+    try { await BloomAPI.addShared({ schoolId:s.schoolId, userId:s.session.user.id, topic:item.topic, title:item.title, tryIt:item.tryIt, text:item.text }); }
+    catch (e) { this.setState({ sharedError:'Couldn’t save that to your resources. Check your connection and try again.' }); }
     this.refreshShared();
   }
   async removeShared(id) {
@@ -831,7 +843,8 @@ class Component extends DCLogic {
       if (r && r.status === 'rejected') { fail('The tailored version added claims that aren’t in the evidence, so it was discarded. The default idea still applies.'); return; }
       fail('Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
     } catch (e) {
-      fail(e && e.status === 429 ? 'You’ve used today’s tailoring allowance for this school. The evidence-based default is shown instead.'
+      fail(e && e.status === 403 ? 'Tailoring is for school accounts. The evidence-based default is shown instead.'
+        : e && e.status === 429 ? 'You’ve used today’s tailoring allowance for this school. The evidence-based default is shown instead.'
         : e && (e.message === 'offline' || e.message === 'unauthenticated') ? 'AI tailoring needs an online connection. The evidence-based default is shown instead.'
         : 'Couldn’t tailor this just now. Try again in a moment — the default idea still applies.');
     }
@@ -865,18 +878,38 @@ class Component extends DCLogic {
     }, 50);
   }
 
-  // Runs on first load and on every auth state change (including the magic-link return).
+  // Runs on first load and on every auth state change. supabase-js also fires this on
+  // INITIAL_SESSION and on each hourly token refresh, so it must be idempotent and must not
+  // clobber work in progress.
   async onSession(session) {
     if (!session) { this.setState({ session:null, profile:null, schoolId:null, authStatus: this.state.authStatus === 'sent' ? 'sent' : 'signed_out' }); return; }
-    let profile = null;
-    try { profile = await BloomAPI.loadProfile(); } catch (e) { profile = null; }
-    // Allow-list: a session with no profiles row is not a pilot user, so drop it.
-    if (!profile) {
-      await BloomAPI.signOut();
-      this.setState({ session:null, profile:null, schoolId:null, authStatus:'signed_out', authError:'That address is not on the Bloom pilot list. Ask the central team to add you.' });
+    if (this.state.authStatus === 'signed_in' && this.state.session
+        && this.state.session.user && this.state.session.user.id === session.user.id) {
+      this.setState({ session });          // token refreshed for the same user; nothing to reload
       return;
     }
-    this.setState({ session, profile, schoolId: profile.school_id || null, authStatus:'signed_in', authError:'' }, () => this.loadForSchool(profile.school_id));
+    if (this._bootstrapping) return;
+    this._bootstrapping = true;
+    let res = { failed: true };
+    try { res = await BloomAPI.loadProfile(); } catch (e) { res = { failed: true }; }
+    this._bootstrapping = false;
+
+    // Only sign out when the profile is genuinely absent. A failed lookup is a network
+    // problem, not an allow-list decision.
+    if (res.absent) {
+      await BloomAPI.signOut();
+      this.setState({ session:null, profile:null, schoolId:null, authStatus:'signed_out',
+        authError:'That address is not on the Bloom pilot list. Ask the central team to add you.' });
+      return;
+    }
+    if (res.failed || !res.profile) {
+      this.setState({ authStatus:'signed_out',
+        authError:'Couldn’t reach Bloom just now. Check your connection and try again.' });
+      return;
+    }
+    const profile = res.profile;
+    this.setState({ session, profile, schoolId: profile.school_id || null, authStatus:'signed_in', authError:'' },
+      () => this.loadForSchool(profile.school_id));
   }
 
   // Everything steps 2-4 need, read from the server for the signed-in school.
@@ -893,7 +926,9 @@ class Component extends DCLogic {
     try {
       const mine = await BloomAPI.myPulse(week);
       if (mine) {
-        this.setState({ topic:mine.topic, impact:mine.impact, note:mine.note || '', saved:true, skipped:false, screen: this.state.screen === 1 ? 2 : this.state.screen });
+        this.setState({ topic:mine.topic, impact:mine.impact, note:mine.note || '', saved:true, skipped:false,
+                        savedTopic:mine.topic, savedNote:mine.note || '',
+                        screen: this.state.screen === 1 ? 2 : this.state.screen });
       } else {
         // No pulse yet this week: fall back to the device-local draft (drafts stay local by design).
         const d = JSON.parse(localStorage.getItem('bloom-pulse-draft:' + schoolId) || 'null');
@@ -904,7 +939,10 @@ class Component extends DCLogic {
   }
 
   // bloom-pulse-submissions -> network_pulse(). Other schools' rows never reach the client.
-  async refreshNetwork() { try { this.setState({ net: await BloomAPI.networkPulse(this.weekISO()) }); } catch (e) {} }
+  async refreshNetwork() {
+    try { this.setState({ net: await BloomAPI.networkPulse(this.weekISO()), netFailed:false }); }
+    catch (e) { this.setState({ netFailed:true }); }
+  }
 
   // bloom-pulse-rewards -> points_ledger sum + redemptions. The client never does its own maths.
   async refreshRewards() {
@@ -912,7 +950,8 @@ class Component extends DCLogic {
       const [ledger, reds, history] = await Promise.all([BloomAPI.listLedger(), BloomAPI.listRedemptions(), BloomAPI.myPulseHistory(this.weeksAgoISO(12))]);
       const redeemed = {};
       reds.forEach(r => { redeemed[r.perk_id] = { code:r.code, atISO:r.issued_at, expiresAt:r.expires_at, usedAt:r.used_at }; });
-      this.setState({ ledger, redeemed, points: Math.max(0, ledger.reduce((a, r) => a + r.delta, 0)), streak: this.streakFrom(history) });
+      this.setState({ ledger, redeemed, points: Math.max(0, ledger.reduce((a, r) => a + r.delta, 0)),
+                      streak: this.streakFrom(history), myWeeks: history });
     } catch (e) {}
   }
   async refreshShared() { try { this.setState({ shared: (await BloomAPI.listShared()).map(mapShared) }); } catch (e) {} }
@@ -923,10 +962,10 @@ class Component extends DCLogic {
     const have = new Set((rows || []).map(r => r.week_start));
     const d = this.weekStart(); let n = 0;
     if (!have.has(this.weekISO())) d.setDate(d.getDate() - 7);
-    while (have.has(d.toISOString().slice(0,10))) { n++; d.setDate(d.getDate() - 7); }
+    while (have.has(this.isoDate(d))) { n++; d.setDate(d.getDate() - 7); }
     return n;
   }
-  weeksAgoISO(n) { const d = this.weekStart(); d.setDate(d.getDate() - n * 7); return d.toISOString().slice(0,10); }
+  weeksAgoISO(n) { const d = this.weekStart(); d.setDate(d.getDate() - n * 7); return this.isoDate(d); }
   componentDidUpdate() {
     const prev = { sheet: this._lastSheet }; this._lastSheet = this.state.sheet;
     if (this.state.sheet && this.state.sheet !== prev.sheet) {
@@ -936,7 +975,11 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { if (this.mq) (this.mq.removeEventListener ? this.mq.removeEventListener('change', this.onMq) : this.mq.removeListener(this.onMq)); clearInterval(this.iconPoll); clearInterval(this.apiPoll); window.removeEventListener('keydown', this.onKey); }
   weekStart() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; }
-  weekISO() { return this.weekStart().toISOString().slice(0,10); }
+  // Format from the local date parts. toISOString() converts to UTC, which for any timezone
+  // east of UTC turns local Monday 00:00 into the previous Sunday — the pulse would then be
+  // written to a week_start that current_monday() never reads.
+  isoDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  weekISO() { return this.isoDate(this.weekStart()); }
   persist(patch) {
     this.setState(patch, () => { try { localStorage.setItem('bloom-pulse-draft:' + (this.state.schoolId || 'none'), JSON.stringify({ weekStartISO:this.weekISO(), topic:this.state.topic, impact:this.state.impact, note:this.state.note })); } catch (e) {} });
   }
@@ -950,11 +993,20 @@ class Component extends DCLogic {
     // Step 2 is fed entirely by network_pulse(): server-side counts with the minimum-cell
     // rule already applied. A theme only one school picked arrives as a count, never by name.
     const net = s.net || {};
+    const netUnavailable = !!s.netFailed && !s.net;
     const nSchools = net.schools_total || (s.schools || []).length || 5;
     const cur = countMap(net.current), prev = countMap(net.previous);
     const C = [0,1,2,3].map(i => seriesMap(net.four_weeks, i));
-    // The principal's own theme is always known to them, even when suppressed for everyone else.
-    if (s.saved && s.topic) { cur[s.topic] = Math.max(cur[s.topic] || 0, 1); C[3][s.topic] = Math.max(C[3][s.topic] || 0, 1); }
+    // A school always knows its own theme, even when the minimum-cell rule hides it from
+    // everyone else. Use the saved pulse, not the draft being edited, or the network view
+    // would show a theme that was never submitted. Apply it to every week in the series,
+    // or an unshared theme reads as "Rising" forever against a previous week of zero.
+    const weekAt = (i) => { const d = this.weekStart(); d.setDate(d.getDate() - (3 - i) * 7); return this.isoDate(d); };
+    const ownAt = {}; (s.myWeeks || []).forEach(r => { ownAt[r.week_start] = r.topic; });
+    if (s.saved && s.savedTopic) ownAt[week] = s.savedTopic;
+    [0,1,2,3].forEach(i => { const t = ownAt[weekAt(i)]; if (t) C[i][t] = Math.max(C[i][t] || 0, 1); });
+    if (ownAt[weekAt(3)]) cur[ownAt[weekAt(3)]] = Math.max(cur[ownAt[weekAt(3)]] || 0, 1);
+    if (ownAt[weekAt(2)]) prev[ownAt[weekAt(2)]] = Math.max(prev[ownAt[weekAt(2)]] || 0, 1);
     const included = net.included || 0;
     const suppressed = net.suppressed || 0;
 
@@ -1030,7 +1082,7 @@ class Component extends DCLogic {
       { key:'star', label:'First pulse', sub: streak > 0 ? 'Shared a weekly pulse' : 'Share your first weekly pulse', earned: streak > 0 },
       { key:'flame', label:'4-week streak', sub: streak >= 4 ? 'Four Mondays running' : `${streak} of 4 Mondays so far`, earned: streak >= 4 },
       { key:'users', label:'Full network', sub: fullNetwork ? 'All schools in' : `${included} of ${nSchools} in this week`, earned: s.saved && fullNetwork },
-      { key:'pen', label:'Note shared', sub: s.saved && noteTrim ? 'Context helps the team' : 'Add a note to your pulse', earned: s.saved && !!noteTrim },
+      { key:'pen', label:'Note shared', sub: s.saved && (s.savedNote||'').trim() ? 'Context helps the team' : 'Add a note to your pulse', earned: s.saved && !!(s.savedNote||'').trim() },
     ].map(b => ({ ...b, aria:`${b.label}: ${b.earned ? 'earned' : 'not yet earned'}`, bg: b.earned ? PAPER : '#F6F5F0', opacity: b.earned ? 1 : .7, iconBg: b.earned ? '#F8F3E8' : MINT, iconEl: icon(b.key, { size:18, color: b.earned ? '#8A6614' : MUTED, fallback:'M12 3l2.7 5.6 6.3.9-4.5 4.4 1 6.1L12 17l-5.5 3 1-6.1L3 9.5l6.3-.9z' }) }));
     // Perks come from the perks table. The app stays in "Term 2 preview" until a partner signs.
     const perkList = (s.perkRows || []).map(k => ({ id:k.id, partner:k.partner, mark:(String(k.partner || 'B').trim()[0] || 'B').toUpperCase(), offer:k.offer, detail:k.detail, cost:k.cost, terms:k.terms, active:k.active, validDays:k.valid_days }));
@@ -1086,7 +1138,7 @@ class Component extends DCLogic {
       },
       showMore: s.showMore, showMoreButton: !s.showMore, moreLabel: `Show ${TOPICS.length - 6} more areas`,
       toggleMore: () => this.setState({ showMore: true }),
-      topicCards: TOPICS.map(t => { const on = s.topic===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, iconEl: icon(t.id, { color: on ? GREEN : MUTED, fallback: t.icon }), select: () => this.persist({ topic:t.id }) }; }),
+      topicCards: TOPICS.map(t => { const on = s.topic===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, iconEl: icon(t.id, { color: on ? GREEN : MUTED, fallback: t.icon }), select: () => this.persist({ topic:t.id, checks:{} }) }; }),
       primaryCards: cardsSplit.primary, moreCards: cardsSplit.more,
       impactOptions: IMPACTS.map(o => { const on = s.impact===o.id; return { ...o, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, select: () => this.persist({ impact:o.id }) }; }),
       note:s.note, noteCount:s.note.length, setNote: e => this.persist({ note:e.target.value.slice(0,240) }),
@@ -1097,10 +1149,14 @@ class Component extends DCLogic {
       talkMailto: `mailto:?subject=${encodeURIComponent('A short conversation this week')}&body=${encodeURIComponent(talkMessage)}`,
       // bloom-pulse-submissions -> pulses upsert. Points are awarded by the insert trigger.
       submit: async () => { if (!canSubmit || s.submitting || !s.session || !s.schoolId) return;
+        // Read the week now, not at render time: a tab left open from Friday to Monday would
+        // otherwise upsert onto last week's row and overwrite that pulse.
+        const wk = this.weekISO();
         this.setState({ submitting:true, submitError:'' });
         try {
-          await BloomAPI.upsertPulse({ schoolId:s.schoolId, weekStart:week, topic:s.topic, impact:s.impact, note:s.note, userId:s.session.user.id });
-          this.setState({ saved:true, skipped:false, justSaved:true, screen:2, submitting:false }, () => {
+          await BloomAPI.upsertPulse({ schoolId:s.schoolId, weekStart:wk, topic:s.topic, impact:s.impact, note:s.note, userId:s.session.user.id });
+          this.setState({ saved:true, skipped:false, justSaved:true, screen:2, submitting:false,
+                          savedTopic:s.topic, savedNote:s.note }, () => {
             setTimeout(() => this.setState({ justSaved:false }), 3500);
             this.refreshNetwork(); this.refreshRewards();
           });
@@ -1109,7 +1165,9 @@ class Component extends DCLogic {
       skip: () => this.setState({ skipped:true, saved:false, justSaved:false, screen:2 }),
       savedMsg: 'Pulse saved for this week — thank you.',
       justSaved:s.justSaved, skipped:s.skipped,
-      includedLabel:`${included} of ${nSchools} principal pulses included`,
+      includedLabel: netUnavailable
+        ? 'The network view is unavailable just now — pull down to retry.'
+        : `${included} of ${nSchools} principal pulses included`,
       includedDots: Array.from({ length: nSchools }, (_, i) => ({ bg: i < included ? GREEN : BORDER })),
       hasSuppressed: suppressed > 0,
       suppressedLabel: `${suppressed} further ${suppressed === 1 ? 'theme' : 'themes'} not shown to protect privacy.`,
@@ -1123,6 +1181,7 @@ class Component extends DCLogic {
       shareMailto: `mailto:?subject=${encodeURIComponent(`A 60-second idea: ${micro.title}`)}&body=${encodeURIComponent(shareText)}`,
       shareSaved, shareSavedTitle: shareSaved ? 'Saved to your resources' : 'Keep this for later',
       shareSavedSub: shareSaved ? 'Find it under “I need a resource”.' : 'Adds it to “I need a resource” so your team can reuse it.',
+      sharedError: !!s.sharedError, sharedErrorText: s.sharedError,
       shareSaveLabel: shareSaved ? 'Added' : 'Add to resources', shareSaveBg: shareSaved ? '#D8D2E4' : GREEN, shareSaveFg: shareSaved ? '#5A5E74' : PAPER,
       addToResources: () => { if (shareSaved) return; this.addShared({ key:shareKey, topic:effTopic, title:micro.title, tryIt:micro.tryIt, text:shareText, atISO:new Date().toISOString() }); },
       hasShared: shared.length > 0, sharedCount: shared.length,
@@ -1142,7 +1201,13 @@ class Component extends DCLogic {
       aiReset: () => this.setState({ ai:{ key:null, status:'idle', data:null, error:'' } }),
       perksCta: s.saved ? 'See my points & perks' : 'See perks',
       actions: ACTIONS.map(a => ({ ...a, sub: a.id === 'resource' && shared.length ? `Templates plus ${shared.length} shared ${shared.length === 1 ? 'idea' : 'ideas'}` : a.sub, bg: a.id==='central' ? WARM : PAPER, iconBg: a.id==='central' ? '#FFFEF9' : MINT, iconEl: icon(a.id, { fallback: a.icon }),
-        open: () => this.setState({ sheet:a.id, copied:false, cContext: this.state.cContext || note }) })),
+        open: () => {
+          // Reset the sent state so a second request can be filed, and refresh the inbox for
+          // central staff, whose only view of new requests is this sheet.
+          if (a.id === 'central') this.setState({ cSent:false, cRef:'', cError:'' });
+          this.setState({ sheet:a.id, copied:false, cContext: this.state.cContext || note });
+          this.refreshRequests();
+        } })),
       sheetOpen: !!sheetId, sheet, closeSheet: () => this.setState({ sheet:null, confirmRedeem:false }),
       checklist, checkedLabel: `${checked} of 5 done`,
       talkMessage, copyLabel: s.copied ? 'Copied' : 'Copy message',
@@ -1150,6 +1215,7 @@ class Component extends DCLogic {
       openCentralFromTalk: () => this.setState({ sheet:'central', cType:'conversation', cContext: this.state.cContext || note }),
       supportTypes: SUPPORT_TYPES.map(t => { const on = s.cType===t.id; return { ...t, selected:on, border: on ? SEL : UNSEL, bg: on ? MINT : PAPER, select: () => this.setState({ cType:t.id }) }; }),
       showUrgentNotice, urgentRouteText: routeConfigured ? 'For urgent concerns, call the CEBM central team now on +1 868-607-2326 (Mon–Fri, 8am–4pm). Lifeline: (800) 5588, available 24/7 for free, confidential emotional support. For child-protection concerns call the Children’s Authority on 996, and call 999 if anyone is at immediate risk.' : 'If anyone is at immediate risk, call emergency services and follow your school’s safeguarding procedure.',
+      cError: !!s.cError, cErrorText: s.cError,
       cContext:s.cContext, setCContext: e => this.setState({ cContext:e.target.value.slice(0,300) }),
       cHelp:s.cHelp, setCHelp: e => this.setState({ cHelp:e.target.value.slice(0,300) }),
       centralNotSent:!s.cSent, cSent:s.cSent, centralDisabled: !s.cType || s.cSending, centralBg: s.cType && !s.cSending ? GREEN : '#D8D2E4', centralFg: s.cType && !s.cSending ? PAPER : '#5A5E74',
@@ -1157,12 +1223,17 @@ class Component extends DCLogic {
       // bloom-pulse-requests -> support_requests. Only the context the principal chose to
       // send reaches the central team; pulses.note never does.
       sendCentral: async () => { if (!s.cType || s.cSending || !s.session || !s.schoolId) return;
-        this.setState({ cSending:true });
-        const stem = `BP-${week.replace(/-/g,'').slice(2)}-`;
+        this.setState({ cSending:true, cError:'' });
+        const wk = this.weekISO();
+        const stem = `BP-${wk.replace(/-/g,'').slice(2)}-`;
         for (let attempt = 0; attempt < 4; attempt++) {
           const ref = stem + Math.floor(100 + Math.random() * 900);
           try {
-            await BloomAPI.insertRequest({ ref, schoolId:s.schoolId, weekStart:week, type:s.cType, topic:effTopic, impact:s.impact, context:s.cContext, help:s.cHelp, userId:s.session.user.id });
+            // effTopic falls back to the network's hottest theme for *display*; never file a
+            // request under a theme this school did not choose.
+            await BloomAPI.insertRequest({ ref, schoolId:s.schoolId, weekStart:wk, type:s.cType,
+              topic: s.topic || s.savedTopic || 'other', impact: s.impact || null,
+              context:s.cContext, help:s.cHelp, userId:s.session.user.id });
             this.setState({ cSent:true, cRef:ref, cSending:false }, () => this.refreshRequests());
             return;
           } catch (e) {
@@ -1170,7 +1241,8 @@ class Component extends DCLogic {
             break;
           }
         }
-        this.setState({ cSending:false });
+        this.setState({ cSending:false,
+          cError:'Couldn’t send that request. Check your connection and try again — or call the central team on +1 868-607-2326.' });
       },
       // Sign-in — Supabase magic link (replaces the demo school picker)
       needsSchool: s.authStatus !== 'signed_in',
@@ -1222,7 +1294,7 @@ class Component extends DCLogic {
             : 'Couldn’t sign you in with that link. Send yourself a new one and try again.' });
         }
       },
-      openDemo: () => this.setState({ sheet:'demo' }),
+      openDemo: () => { this.setState({ sheet:'demo' }); this.refreshRequests(); },
       // Switching school is admin impersonation only; principals are bound to their profile.
       canSwitchSchool: role === 'admin',
       // Principals see their own requests above; only central staff can work them.
@@ -1259,13 +1331,21 @@ class Component extends DCLogic {
         costLabel: r ? 'Redeemed' : `${k.cost} pts`, costColor: r ? GREEN : can ? INK : MUTED, status: r ? 'Show code' : perksPreview ? 'Term 2' : can ? 'Available' : `${k.cost - points} more`,
         open: () => this.setState({ sheet:'perk', perkId:k.id }) }; }),
       perk,
+      redeemError: !!s.redeemError, redeemErrorText: s.redeemError,
       // bloom-pulse-rewards -> POST /functions/v1/redeem. The code, the expiry and the
       // points debit are all issued server-side; the client only re-reads the result.
       redeemPerk: async () => { if (!perkCan || perkRed) return;
         if (!s.confirmRedeem) { this.setState({ confirmRedeem:true }); clearTimeout(this.redeemT); this.redeemT = setTimeout(() => this.setState({ confirmRedeem:false }), 5000); return; }
         clearTimeout(this.redeemT);
-        this.setState({ confirmRedeem:false });
-        try { await BloomAPI.redeem(perkSel.id); } catch (e) {}
+        this.setState({ confirmRedeem:false, redeemError:'' });
+        try { await BloomAPI.redeem(perkSel.id); }
+        catch (e) {
+          const st = e && e.status;
+          this.setState({ redeemError:
+            st === 402 ? 'You don’t have enough points for that yet.'
+          : st === 404 ? 'That perk isn’t available yet.'
+          : 'Couldn’t redeem just now. Check your connection and try again.' });
+        }
         this.refreshRewards();
       },
     };
