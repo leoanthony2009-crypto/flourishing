@@ -1,17 +1,41 @@
 // Supabase Edge Function: POST /functions/v1/tailor
-// Proxies "Tailor this idea" to Anthropic with the same closed-world rules and validation as the client prototype.
+// Proxies "Tailor this idea" to Anthropic with the same closed-world rules and validation as
+// the client prototype, and assembles the three sources the system prompt promises: the
+// research base, what colleagues across Bloom do, and what this school actually needs.
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { AI_SYSTEM } from './prompt.ts';
+// Plain JS so the test suite runs this exact code under Node rather than a copy of it.
+import { TOPICS, clean, compose, ungrounded } from './compose.mjs';
 
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_LIMIT = 6;
 const LIMITS = { title: 8, body: 50, tryIt: 40, prompt: 22, grounding: 28 };
-// The topic_id enum, mirrored. An unrecognised topic is rejected rather than forwarded.
-const TOPICS = new Set(['workload','staffing','teaching','behaviour','attendance','safeguarding',
-  'parents','send','culture','confidence','resources','change','data','other']);
+
+// Opus first, Sonnet as the fallback. Both support structured outputs and adaptive thinking,
+// so one request shape covers both.
+const MODELS = ['claude-opus-5', 'claude-sonnet-5'];
+// Guaranteed-shape output. The old code regex-matched a JSON object out of free text, which
+// failed whenever the model wrapped it in prose — a well-formed idea thrown away as "rejected".
+// Declining shares this schema rather than having its own: tailored:false plus a reason, with
+// the other five fields empty, so there is only ever one shape to parse.
+const OUTPUT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    tailored:  { type: 'boolean' },
+    reason:    { type: 'string' },
+    title:     { type: 'string' },
+    body:      { type: 'string' },
+    tryIt:     { type: 'string' },
+    prompt:    { type: 'string' },
+    grounding: { type: 'string' },
+  },
+  required: ['tailored', 'reason', 'title', 'body', 'tryIt', 'prompt', 'grounding'],
+};
+
 const currentMonday = () => {
   const d = new Date(); d.setUTCHours(0, 0, 0, 0);
   d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
@@ -20,22 +44,44 @@ const currentMonday = () => {
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type', 'access-control-allow-methods': 'POST, OPTIONS' };
 
-const clean = (v: unknown, max: number) => String(v ?? '').trim().replace(/^[“"]|[”"]$/g, '').split(/\s+/).slice(0, max).join(' ');
-const hasPct = (s: string) => /\d+(\.\d+)?\s?%/.test(s);
-const ungrounded = (out: string, evidence: string) =>
-  /https?:|www\.|\b\d{3}[- ]\d{4}\b/i.test(out) ||
-  (/effect size|\bstud(y|ies)\b|research shows|according to/i.test(out)) ||
-  (hasPct(out) && !hasPct(evidence));
+
+
+class ModelError extends Error {
+  constructor(public status: number, public detail: string) { super(`anthropic ${status}`); }
+}
 
 async function callModel(model: string, user: string) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: 500, system: AI_SYSTEM, messages: [{ role: 'user', content: user }] }),
+    body: JSON.stringify({
+      model,
+      // Room for adaptive thinking as well as the answer. The old 500 would have truncated
+      // mid-object on any model that thinks before it writes.
+      max_tokens: 4000,
+      system: AI_SYSTEM,
+      messages: [{ role: 'user', content: user }],
+      // Low effort suits a short, tightly specified rewrite, and keeps a principal from
+      // waiting. The schema is what guarantees the shape.
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: OUTPUT_SCHEMA } },
+    }),
   });
-  if (!r.ok) throw new Error(`anthropic ${r.status}`);
+  if (!r.ok) throw new ModelError(r.status, (await r.text().catch(() => '')).slice(0, 300));
   const j = await r.json();
-  return (j.content ?? []).map((c: any) => c.text ?? '').join('');
+  if (j.stop_reason === 'refusal') throw new ModelError(200, 'refusal');
+  if (j.stop_reason === 'max_tokens') throw new ModelError(200, 'max_tokens');
+  return (j.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text ?? '').join('');
+}
+
+// Why it failed, in a form the client can say something honest about. Without this an unset
+// API key is indistinguishable from a busy model, and the app blames the connection either way.
+function classify(e: unknown): 'not_configured' | 'busy' | 'error' {
+  if (!ANTHROPIC_API_KEY) return 'not_configured';
+  if (e instanceof ModelError) {
+    if (e.status === 401 || e.status === 403) return 'not_configured';
+    if (e.status === 429 || e.status >= 500) return 'busy';
+  }
+  return 'error';
 }
 
 serve(async (req) => {
@@ -52,7 +98,7 @@ serve(async (req) => {
 
   let body: any = {};
   try { body = await req.json(); } catch { return json({ status: 'error', error: 'bad request' }, 400); }
-  const { impact, note = '', base, more } = body;
+  const { impact, note = '', base, more, signal } = body;
 
   // Everything below depends on these being real values. Taking `topic` straight off the body
   // let `Safeguarding` and `safeguarding ` slip past the hard block on a strict ===, and an
@@ -85,23 +131,8 @@ serve(async (req) => {
   // a count below the limit and proceed.
   const rowId = await log('error');
 
-  const userMsg = `PRINCIPAL’S WEEKLY PULSE
-Theme: ${base.label ?? topic}
-How much it is affecting them: ${impact ?? 'not shared'}
-Principal’s note (verbatim): ${note ? `"${note}"` : '(none given)'}
-
-GROUNDING MATERIAL — the only evidence you may draw on:
-Evidence: ${base.evidence}
-Source: ${base.source}
-Trinidad & Tobago context: ${base.local}
-Related checklist: ${(more?.checklist ?? []).join('; ')}
-Related idea: ${more?.idea?.title ?? ''} — ${more?.idea?.body ?? ''}
-
-DEFAULT IDEA TO ADAPT
-Title: ${base.title}
-Body: ${base.body}
-Try this today: ${base.tryIt}
-Prompt: ${base.prompt}`;
+  // The three sources the system prompt promises, assembled by the module the tests drive.
+  const { userMsg, corpus } = compose({ topic, impact, note, base, more, signal });
 
   // Resolve the reserved row to its real outcome instead of writing a second one. It updates
   // that exact id: "the school's newest row" would settle a sibling request's reservation
@@ -113,24 +144,31 @@ Prompt: ${base.prompt}`;
     if (error) console.error('ai_tailor_log settle failed', error.message);
   };
 
-  const models = ['claude-sonnet-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5'];
   let last = 'error';
-  for (const model of models) {
+  let lastErr: unknown = null;
+  for (const model of MODELS) {
     try {
-      const text = await callModel(model, userMsg);
-      const m = text.match(/\{[\s\S]*\}/);
-      const d = JSON.parse(m ? m[0] : text);
-      if (d?.tailored === false) { await settle('declined', model); return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') }); }
+      const d = JSON.parse(await callModel(model, userMsg));
+      if (d?.tailored === false) {
+        await settle('declined', model);
+        return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') });
+      }
       if (!(d?.title && d?.body && d?.tryIt && d?.prompt && d?.grounding)) { last = 'rejected'; continue; }
       const joined = [d.title, d.body, d.tryIt, d.prompt].join(' ');
-      if (ungrounded(joined, base.evidence)) { last = 'rejected'; continue; }
+      if (ungrounded(joined, corpus)) { last = 'rejected'; continue; }
       const data = { title: clean(d.title, LIMITS.title), body: clean(d.body, LIMITS.body), tryIt: clean(d.tryIt, LIMITS.tryIt), prompt: clean(d.prompt, LIMITS.prompt), grounding: clean(d.grounding, LIMITS.grounding) };
       await settle('done', model);
       return json({ status: 'done', data });
-    } catch (_e) { last = 'error'; }
+    } catch (e) {
+      lastErr = e;
+      last = 'error';
+      console.error('tailor model call failed', model,
+        e instanceof ModelError ? `${e.status} ${e.detail}` : String(e));
+    }
   }
   await settle(last as any);
-  return json({ status: last === 'rejected' ? 'rejected' : 'error' });
+  if (last === 'rejected') return json({ status: 'rejected' });
+  return json({ status: 'error', reason: classify(lastErr) });
 });
 
 function json(b: unknown, status = 200) {

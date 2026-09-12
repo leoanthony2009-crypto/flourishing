@@ -58,6 +58,10 @@ await page.addInitScript(({ SAN, monday }) => {
   A.listShared = async () => ([]);
   A.listRequests = async () => ([]);
   A.upsertPulse = async (p) => { window.__writes.push(['pulse', p.topic, p.impact, p.note]); return {}; };
+  // Capture what "Tailor this idea" actually sends. The peer line and the network signal sat
+  // unused in the evidence base for weeks, so the feature was asking a model for school-specific
+  // advice while withholding everything that made it specific.
+  A.tailor = async (payload) => { window.__tailor = payload; return { status:'error', reason:'not_configured' }; };
   A.insertRequest = async (r) => { window.__writes.push(['request', r.type, r.ref]); return {}; };
   A.addShared = async (x) => { window.__writes.push(['shared', x.title]); return {}; };
   }
@@ -109,6 +113,28 @@ const step3 = {
 };
 await shot('step3');
 
+// --- Step 3a: the tailor payload ----------------------------------------------
+await page.evaluate(() => [...document.querySelectorAll('button')]
+  .find(b => /Tailor this idea/i.test(b.textContent))?.click());
+await page.waitForTimeout(900);
+const tailor = await page.evaluate(() => {
+  const p = window.__tailor || {};
+  return {
+    sent: !!window.__tailor,
+    // 1. research
+    hasEvidence: !!p.base?.evidence, hasSource: !!p.base?.source, hasLocal: !!p.base?.local,
+    // 2. colleagues
+    hasPeer: !!p.more?.peer, hasChecklist: !!p.more?.checklist?.length,
+    hasResource: !!p.more?.resource, networkCount: p.signal?.networkCount, trend: p.signal?.trend,
+    // 3. this school
+    note: p.note, impact: p.impact, weeksRunning: p.signal?.weeksRunning,
+    ownLibraryIsArray: Array.isArray(p.signal?.ownLibrary),
+    // and the honest failure message
+    saysNotSwitchedOn: /isn.t switched on/i.test(document.body.innerText),
+  };
+});
+console.log('--- tailor payload ---', JSON.stringify(tailor));
+
 await page.click('button:has-text("See my points & perks")');
 await page.waitForTimeout(1200);
 
@@ -132,6 +158,13 @@ const pass =
   step1.header && step1.heading &&
   step2.reached && step2.namesSharedTheme && step2.showsSuppression && step2.neverNamesSuppressed &&
   step3.reached && step3.hasSupportRoutes &&
+  // All three sources leave the browser, and the failure reads honestly.
+  tailor.sent && tailor.hasEvidence && tailor.hasSource && tailor.hasLocal &&
+  tailor.hasPeer && tailor.hasChecklist && tailor.hasResource &&
+  // 2 other schools + this one = 3, against a previous week of none, so: rising.
+  tailor.networkCount === 3 && tailor.trend === 'rising' &&
+  tailor.note === 'Two staff out and cover is thin.' && tailor.impact === 'a_lot' &&
+  tailor.weeksRunning >= 1 && tailor.ownLibraryIsArray && tailor.saysNotSwitchedOn &&
   step4.reached && step4.perksInPreview &&
   writes.some(w => w[0] === 'pulse' && w[1] === 'workload' && w[2] === 'a_lot') &&
   errors.length === 0;

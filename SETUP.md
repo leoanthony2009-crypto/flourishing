@@ -106,6 +106,11 @@ stubbed; the component, its state and the whole template are the real thing.
 | `link-safety.mjs` | the **real** `completeSignIn` against foreign links and tokens |
 | `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
 | `staff-signin.mjs` | the `?staff=1` password route: hidden by default, real session when used |
+
+`npm run check` also runs `tailor-compose.mjs`, which drives the edge function's own
+`compose()` and `ungrounded()` under Node: all three sources present, the note carried
+verbatim, no raw enum leaking into the prompt, a quoted figure kept but an invented one
+rejected, and hostile input bounded.
 | `app-signed-in.mjs` | all four steps as a signed-in principal |
 | `sheets.mjs` | every support sheet, the urgent request, the PDF export |
 | `timezone.mjs` | the week written is a Monday from UTC-11 to UTC+14 |
@@ -308,9 +313,53 @@ mean inventing a design the spec leaves open:
 
 Two settings, both in the Supabase dashboard, both unavailable to the tooling here:
 
-1. **`ANTHROPIC_API_KEY`** — Project Settings → Edge Functions → Secrets. Until it is set,
-   `tailor` returns `{status:'error'}` on every call. The client already degrades correctly:
-   it shows the evidence-based default idea with an explanation, so nothing looks broken.
+1. **`ANTHROPIC_API_KEY`** — Project Settings → Edge Functions → Secrets. **This is the only
+   thing standing between "Tailor this idea" and working.** Everything else on that path is
+   built, deployed and tested; the function now says so itself rather than leaving you to
+   guess. Against the live endpoint, with a real principal token:
+
+   ```
+   POST /functions/v1/tailor  →  {"status":"error","reason":"not_configured"}
+   ```
+
+   The client turns that into *"AI tailoring isn't switched on for Bloom yet. The
+   evidence-based idea below still applies."* — true, and distinguishable from a busy model
+   (`reason: "busy"`) or a connection problem. Before this, all three read as "check your
+   connection", so an unset key looked like a network wobble you could retry your way out of.
+
+   Get a key from `console.anthropic.com` → API Keys, then paste it in as `ANTHROPIC_API_KEY`.
+   No redeploy is needed; the next call picks it up.
+
+### What "Tailor this idea" actually sends
+
+The feature's whole claim is that it is not generic advice, so the model is given three
+sources and told it may use nothing else. `tailor/compose.mjs` assembles them and
+`tailor-compose.mjs` drives that exact module — not a copy — under `npm run check`.
+
+| Source | What goes in | Where it comes from |
+|---|---|---|
+| **1. Research** | the evidence, its citation, the Trinidad & Tobago context | the curated evidence base, per topic |
+| **2. Colleagues** | the anonymised peer practice line, how many Bloom schools chose this theme this week and whether it is rising, the shared checklist, the planner, another idea that travelled | the evidence base + the minimum-cell-suppressed aggregate already on screen |
+| **3. This school** | the note verbatim, how much it is affecting them, how many of the last 4 weeks they have chosen this theme, what they have already saved | their own pulse and their own library |
+
+The `peer` and `resource` fields had been sitting in the evidence base unused since the
+handoff: the client never sent them, so a feature built to draw on colleagues was withholding
+the only colleague material it had.
+
+**No other school's note is ever read.** `shared_resources` is RLS'd to `school_id =
+my_school()`, so it is a private per-school library, not a cross-school one — what travels
+between schools is the curated practice line and a suppressed count, never a principal's
+words. `tailor-compose.mjs` asserts the count is absent entirely when nothing is recorded,
+rather than being invented.
+
+Two other changes on the same path:
+
+- **Models.** `claude-sonnet-4-5` → `claude-opus-5`, with `claude-sonnet-5` as the fallback.
+- **Guaranteed JSON.** The old code regex-matched a JSON object out of free text and binned
+  anything it could not parse as `rejected` — a sound idea thrown away because the model
+  wrapped it in a sentence. It now uses structured outputs, so the shape is guaranteed, and
+  `max_tokens` went from 500 to 4000 so a model that thinks before it writes cannot be
+  truncated mid-object.
 
 2. ~~**Auth URL configuration**~~ — **done.** *Site URL* is
    `https://flourishing-sage.vercel.app` and the app is on the *Redirect URLs* list. Verified
