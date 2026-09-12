@@ -14,8 +14,15 @@ export const str = (v, max = 400) => String(v ?? '').trim().slice(0, max);
 export const list = (v, n, max = 200) =>
   Array.isArray(v) ? v.slice(0, n).map((x) => str(x, max)).filter(Boolean) : [];
 
-export const clean = (v, max) =>
-  String(v ?? '').trim().replace(/^[“"]|[”"]$/g, '').split(/\s+/).slice(0, max).join(' ');
+export const clean = (v, max) => {
+  let t = String(v ?? '').trim().replace(/^[“"]|[”"]$/g, '');
+  // A real run came back with: Teaching pupils with SEND" is too broad to see. The model had
+  // echoed the closing quote of the note we handed it verbatim, and a stray quotation mark in
+  // the first line reads as a typo to the principal. An odd count means one has lost its
+  // partner; in fields this short, quotes are decorative anyway.
+  if ((t.match(/["“”]/g) || []).length % 2 === 1) t = t.replace(/["“”]/g, '');
+  return t.split(/\s+/).slice(0, max).join(' ').trim();
+};
 
 // Never legitimate in a tailored idea, whatever the grounding says: the app supplies its own
 // crisis numbers and never asks a principal to follow a link.
@@ -42,7 +49,13 @@ export const ungrounded = (out, corpus) =>
 export function compose({ topic, impact, note, base, more, signal }) {
   const checklist = list(more?.checklist, 6);
   const resourceLines = list(more?.resource?.lines, 4);
-  const peer = str(more?.peer, 600);
+  // The peer line ends, on 12 of the 14 topics, with "Ask the central team for the practice
+  // notes." That is a fair call-to-action in the "Across Bloom" sheet, which is where a
+  // principal reads it — but it is the wrong thing to hand a model that has just been told to
+  // produce ONE action finishable today with the people it already has. Left in, it invites
+  // "contact the central team" as the tailored action, which is a referral, not a step. The
+  // practice is the first sentence; only that is sent. The sheet is untouched.
+  const peer = str(more?.peer, 600).replace(/\s*Ask (?:the central team|them)\b[^.]*\.\s*$/i, '').trim();
   const savedAlready = list(signal?.ownLibrary, 4, 120);
 
   const research = [

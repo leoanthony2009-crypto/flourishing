@@ -116,7 +116,12 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: { user } } = await sb.auth.getUser(jwt);
   if (!user) return json({ status: 'error', error: 'unauthenticated' }, 401);
-  const { data: prof } = await sb.from('profiles').select('school_id').eq('user_id', user.id).single();
+  // maybeSingle, not single: single() errors when the row is absent, which made a genuine
+  // lookup failure and a user with no profile indistinguishable. A real run returned
+  // "no school" for an account that has one — the client renders that as "tailoring is for
+  // school accounts", which is an accusation, not a blip.
+  const { data: prof, error: profErr } = await sb.from('profiles').select('school_id').eq('user_id', user.id).maybeSingle();
+  if (profErr) { console.error('profile lookup failed', profErr.message); return json({ status: 'error', reason: 'busy' }, 503); }
   if (!prof?.school_id) return json({ status: 'error', error: 'no school' }, 403);
 
   let body: any = {};
@@ -174,7 +179,9 @@ serve(async (req) => {
       const d = JSON.parse(await ask(model, userMsg));
       if (d?.tailored === false) {
         await settle('declined', model);
-        return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') });
+        // 40, not 30: the prompt asks for 25, and the clamp is a backstop rather than the thing
+        // that shapes the sentence. At 30 a slightly long reason was cut mid-clause.
+        return json({ status: 'declined', reason: clean(d.reason, 40).replace(/[.!]+$/, '') });
       }
       if (!(d?.title && d?.body && d?.tryIt && d?.prompt && d?.grounding)) { last = 'rejected'; continue; }
       const joined = [d.title, d.body, d.tryIt, d.prompt].join(' ');
