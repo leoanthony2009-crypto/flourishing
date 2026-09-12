@@ -191,14 +191,18 @@
     try {
       var r = await sb.auth.signInWithOtp({
         email: email,
-        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin + window.location.pathname },
+        options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + window.location.pathname },
       });
       if (r.error) throw r.error;
       $('sent').hidden = false;
       $('send').textContent = 'Link sent';
     } catch (e) {
-      $('signin-err').textContent = /not found|signup|disabled|not allowed/i.test(e.message || '')
-        ? 'That address is not on the Bloom pilot list.'
+      var m = e.message || '';
+      $('signin-err').textContent =
+        /not allowed|not on|pilot|database error|unexpected_failure/i.test(m)
+          ? 'That address is not on the Bloom pilot list.'
+        : /rate|too many|limit/i.test(m)
+          ? 'Too many sign-in emails just now. Wait a few minutes and try again.'
         : 'Couldn’t send the link just now. Check your connection and try again.';
       $('signin-err').hidden = false;
       $('send').disabled = false; $('send').textContent = 'Send me a sign-in link';

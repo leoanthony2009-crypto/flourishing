@@ -1186,8 +1186,15 @@ class Component extends DCLogic {
         this.setState({ authStatus:'sending', authError:'' });
         try { await BloomAPI.sendMagicLink(email); this.setState({ authStatus:'sent' }); }
         catch (e) {
-          const notInvited = /not found|signup|disabled|not allowed/i.test((e && e.message) || '');
-          this.setState({ authStatus:'signed_out', authError: notInvited ? 'That address is not on the Bloom pilot list. Ask the central team to add you.' : 'Couldn’t send the link just now. Check your connection and try again.' });
+          const m = (e && e.message) || '';
+          // The allow-list hook raises during sign-up, which Supabase surfaces as a
+          // database error rather than passing the message through.
+          this.setState({ authStatus:'signed_out', authError:
+            /not allowed|not on|pilot|database error|unexpected_failure/i.test(m)
+              ? 'That address is not on the Bloom pilot list. Ask the central team to add you.'
+            : /rate|too many|limit/i.test(m)
+              ? 'Too many sign-in emails just now. Wait a few minutes and try again.'
+            : 'Couldn’t send the link just now. Check your connection and try again.' });
         }
       },
       useAnotherEmail: () => this.setState({ authStatus:'signed_out', authError:'', pasteOpen:false, pasteValue:'', pasteError:'' }),

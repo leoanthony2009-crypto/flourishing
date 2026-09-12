@@ -54,13 +54,15 @@
     onAuthChange: function (cb) {
       ready().then(function (c) { if (c) c.auth.onAuthStateChange(function (_e, session) { cb(session); }); });
     },
-    // Magic link only. shouldCreateUser:false keeps sign-in to invited users;
-    // the app additionally requires a matching profiles row (the pilot allow-list).
+    // Magic link only. shouldCreateUser is true because pilot_allowlist is the gate, not a
+    // manual invite: the on_auth_user_created hook rejects any address that is not listed
+    // (no auth.users row is created) and provisions the profile for any address that is.
+    // With it false, a listed person who had never been invited got no email at all.
     sendMagicLink: async function (email) {
       var c = await ready(); if (!c) throw new Error('offline');
       var res = await c.auth.signInWithOtp({
         email: String(email || '').trim(),
-        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin + window.location.pathname },
+        options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + window.location.pathname },
       });
       if (res.error) throw res.error;
       return true;
