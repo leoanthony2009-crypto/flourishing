@@ -9,6 +9,14 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_LIMIT = 6;
 const LIMITS = { title: 8, body: 50, tryIt: 40, prompt: 22, grounding: 28 };
+// The topic_id enum, mirrored. An unrecognised topic is rejected rather than forwarded.
+const TOPICS = new Set(['workload','staffing','teaching','behaviour','attendance','safeguarding',
+  'parents','send','culture','confidence','resources','change','data','other']);
+const currentMonday = () => {
+  const d = new Date(); d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+};
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type', 'access-control-allow-methods': 'POST, OPTIONS' };
 
@@ -42,19 +50,40 @@ serve(async (req) => {
   const { data: prof } = await sb.from('profiles').select('school_id').eq('user_id', user.id).single();
   if (!prof?.school_id) return json({ status: 'error', error: 'no school' }, 403);
 
-  const body = await req.json();
-  const { topic, impact, note = '', base, more, week_start } = body;
-  if (!topic || !base?.title || !base?.evidence) return json({ status: 'error', error: 'bad request' }, 400);
+  let body: any = {};
+  try { body = await req.json(); } catch { return json({ status: 'error', error: 'bad request' }, 400); }
+  const { impact, note = '', base, more } = body;
+
+  // Everything below depends on these being real values. Taking `topic` straight off the body
+  // let `Safeguarding` and `safeguarding ` slip past the hard block on a strict ===, and an
+  // invalid topic or a missing week_start made the ai_tailor_log insert fail silently, which
+  // in turn made the daily limit (a COUNT over that table) permanently unreachable.
+  const topic = String(body.topic ?? '').trim().toLowerCase();
+  if (!TOPICS.has(topic)) return json({ status: 'error', error: 'bad request' }, 400);
+  if (!base?.title || !base?.evidence) return json({ status: 'error', error: 'bad request' }, 400);
+  const week_start = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week_start ?? ''))
+    ? String(body.week_start) : currentMonday();
 
   const started = Date.now();
-  const log = (outcome: string, model?: string) =>
-    sb.from('ai_tailor_log').insert({ school_id: prof.school_id, week_start, topic, model, outcome, latency_ms: Date.now() - started });
+  // Returns the row id so the reservation below can be resolved to its real outcome. A failed
+  // audit write must not be silent: this table is also what meters the daily limit.
+  const log = async (outcome: string, model?: string) => {
+    const { data, error } = await sb.from('ai_tailor_log').insert({
+      school_id: prof.school_id, week_start, topic, model, outcome, latency_ms: Date.now() - started })
+      .select('id').single();
+    if (error) console.error('ai_tailor_log insert failed', error.message);
+    return data?.id ?? null;
+  };
 
   if (topic === 'safeguarding') { await log('declined'); return json({ status: 'declined', reason: 'follow your school’s child-protection protocol and contact the Children’s Authority' }); }
 
   const since = new Date(); since.setHours(0, 0, 0, 0);
   const { count } = await sb.from('ai_tailor_log').select('*', { count: 'exact', head: true }).eq('school_id', prof.school_id).gte('created_at', since.toISOString());
   if ((count ?? 0) >= DAILY_LIMIT) return json({ status: 'error', error: 'daily limit reached' }, 429);
+
+  // Reserve the slot before calling the model, so N concurrent requests cannot all observe
+  // a count below the limit and proceed.
+  const rowId = await log('error');
 
   const userMsg = `PRINCIPAL’S WEEKLY PULSE
 Theme: ${base.label ?? topic}
@@ -74,6 +103,16 @@ Body: ${base.body}
 Try this today: ${base.tryIt}
 Prompt: ${base.prompt}`;
 
+  // Resolve the reserved row to its real outcome instead of writing a second one. It updates
+  // that exact id: "the school's newest row" would settle a sibling request's reservation
+  // whenever a principal has two tailor calls in flight.
+  const settle = async (outcome: string, model?: string) => {
+    if (!rowId) return;
+    const { error } = await sb.from('ai_tailor_log')
+      .update({ outcome, model, latency_ms: Date.now() - started }).eq('id', rowId);
+    if (error) console.error('ai_tailor_log settle failed', error.message);
+  };
+
   const models = ['claude-sonnet-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5'];
   let last = 'error';
   for (const model of models) {
@@ -81,16 +120,16 @@ Prompt: ${base.prompt}`;
       const text = await callModel(model, userMsg);
       const m = text.match(/\{[\s\S]*\}/);
       const d = JSON.parse(m ? m[0] : text);
-      if (d?.tailored === false) { await log('declined', model); return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') }); }
+      if (d?.tailored === false) { await settle('declined', model); return json({ status: 'declined', reason: clean(d.reason, 30).replace(/[.!]+$/, '') }); }
       if (!(d?.title && d?.body && d?.tryIt && d?.prompt && d?.grounding)) { last = 'rejected'; continue; }
       const joined = [d.title, d.body, d.tryIt, d.prompt].join(' ');
       if (ungrounded(joined, base.evidence)) { last = 'rejected'; continue; }
       const data = { title: clean(d.title, LIMITS.title), body: clean(d.body, LIMITS.body), tryIt: clean(d.tryIt, LIMITS.tryIt), prompt: clean(d.prompt, LIMITS.prompt), grounding: clean(d.grounding, LIMITS.grounding) };
-      await log('done', model);
+      await settle('done', model);
       return json({ status: 'done', data });
     } catch (_e) { last = 'error'; }
   }
-  await log(last as any);
+  await settle(last as any);
   return json({ status: last === 'rejected' ? 'rejected' : 'error' });
 });
 

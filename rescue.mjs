@@ -40,6 +40,9 @@ await page.waitForTimeout(400);
 const opened = await page.evaluate(() => ({
   pasteFieldShown: !!document.querySelector('#paste-link'),
   buttonDisabledWhenEmpty: document.evaluate("//button[contains(., 'Sign me in')]", document, null, 9, null).singleNodeValue?.disabled,
+  // The box takes a link from wherever the principal got it, so it has to say out loud what
+  // a link from anyone else would do. link-safety.mjs covers the code that enforces it.
+  warnsAboutForeignLinks: /sign you into .*their.* account/i.test(document.body.innerText),
 }));
 console.log('disclosure open:', JSON.stringify(opened));
 
@@ -75,7 +78,7 @@ await page.screenshot({ path: '/tmp/rescue.png' });
 await browser.close();
 
 const pass = sent.checkEmail && sent.hasDisclosure && sent.pasteFieldHidden
-  && opened.pasteFieldShown && opened.buttonDisabledWhenEmpty === true
+  && opened.pasteFieldShown && opened.buttonDisabledWhenEmpty === true && opened.warnsAboutForeignLinks
   && /doesn’t look like a sign-in link/.test(bad || '')
   && /already been used or has expired/.test(expired || '')
   && ok.fieldGone && ok.noAlert

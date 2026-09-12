@@ -415,6 +415,7 @@ textarea{resize:none}
         <sc-if value="{{ pasteOpen }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
           <label for="paste-link" style="font-size:13px;line-height:1.45;color:#666A80;">Copy the link from the email — or the address it opened — and paste it here.</label>
+          <p style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">Only paste a link from an email Bloom sent to you. A link from anyone else can sign you into <em>their</em> account, and your pulse would go to their school.</p>
           <input id="paste-link" type="text" inputMode="url" autoComplete="off" placeholder="https://…" value="{{ pasteValue }}" onChange="{{ setPaste }}" style="display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:14px;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6" />
           <sc-if value="{{ pasteError }}" hint-placeholder-val="{{ false }}">
             <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">{{ pasteErrorText }}</p>
@@ -1001,13 +1002,24 @@ class Component extends DCLogic {
     // everyone else. Use the saved pulse, not the draft being edited, or the network view
     // would show a theme that was never submitted. Apply it to every week in the series,
     // or an unshared theme reads as "Rising" forever against a previous week of zero.
+    //
+    // network_pulse() counts OTHER schools only (excludes_self), so this ADDS one rather than
+    // flooring at one: a theme two other schools picked must read 3 here, not 2. When the
+    // server sends no cell for the theme it is hidden, so 0 + 1 = 1 — which under-reports by
+    // one in the single case where exactly one other school shares it. That is the privacy
+    // rule working: naming that school's theme back at a count of 2 is what the server
+    // refuses to do, and the client cannot know the difference. Erring low is the safe side.
     const weekAt = (i) => { const d = this.weekStart(); d.setDate(d.getDate() - (3 - i) * 7); return this.isoDate(d); };
     const ownAt = {}; (s.myWeeks || []).forEach(r => { ownAt[r.week_start] = r.topic; });
     if (s.saved && s.savedTopic) ownAt[week] = s.savedTopic;
-    [0,1,2,3].forEach(i => { const t = ownAt[weekAt(i)]; if (t) C[i][t] = Math.max(C[i][t] || 0, 1); });
-    if (ownAt[weekAt(3)]) cur[ownAt[weekAt(3)]] = Math.max(cur[ownAt[weekAt(3)]] || 0, 1);
-    if (ownAt[weekAt(2)]) prev[ownAt[weekAt(2)]] = Math.max(prev[ownAt[weekAt(2)]] || 0, 1);
+    [0,1,2,3].forEach(i => { const t = ownAt[weekAt(i)]; if (t) C[i][t] = (C[i][t] || 0) + 1; });
+    if (ownAt[weekAt(3)]) cur[ownAt[weekAt(3)]] = (cur[ownAt[weekAt(3)]] || 0) + 1;
+    if (ownAt[weekAt(2)]) prev[ownAt[weekAt(2)]] = (prev[ownAt[weekAt(2)]] || 0) + 1;
     const included = net.included || 0;
+    // Left exactly as the server sent it. It counts hidden cells among other schools, so when
+    // the caller's own theme is one of them it stays counted here even though the line above
+    // shows it. Correcting that would tell the caller their theme has exactly one other
+    // school behind it — the disclosure the minimum-cell rule exists to prevent.
     const suppressed = net.suppressed || 0;
 
     const byCount = Object.keys(cur).sort((a,b) => cur[b]-cur[a] || TOPICS.findIndex(t=>t.id===a)-TOPICS.findIndex(t=>t.id===b));
@@ -1290,6 +1302,9 @@ class Component extends DCLogic {
           const m = (e && e.message) || '';
           this.setState({ pasting:false, pasteError:
             m === 'bad_link' ? 'That doesn’t look like a sign-in link. Copy the whole address, starting with https://.'
+            // Not a Bloom link at all. Say who it could have signed them in as, not just that
+            // it failed — someone who pasted it was sent it by somebody.
+            : m === 'foreign_link' ? 'That link wasn’t sent by Bloom. Only use a link from an email Bloom sent to you — one from anyone else signs you into their account, not yours.'
             : /expired|invalid/i.test(m) ? 'That link has already been used or has expired. Send yourself a new one.'
             : 'Couldn’t sign you in with that link. Send yourself a new one and try again.' });
         }

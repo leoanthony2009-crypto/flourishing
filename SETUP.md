@@ -30,11 +30,15 @@ and the anonymous role can read nothing at all (verified below).
 | Pilot allow-list + auto-provisioning hook | `allowlist.sql` | `bloom_pilot_allowlist` |
 | pg_cron jobs + retention | `jobs.sql` | `bloom_scheduled_jobs` |
 | Note points on update | `points.sql` | `bloom_note_points_on_update` |
+| Security review fixes | `security.sql` | `bloom_close_aggregate_probe`, `bloom_write_side_hardening`, `bloom_pin_request_ownership` |
+| Atomic perk redemption | `redeem.sql` | `bloom_atomic_redeem` |
 | 5 schools, 3 perks (all `active = false`) | `seed.sql` | seeded |
 | AI proxy | `tailor/` | deployed, `verify_jwt` |
 | Perk codes | `redeem/` | deployed, `verify_jwt` |
 
-`harden.sql`, `allowlist.sql`, `jobs.sql` and `points.sql` are new — see each file's header for why.
+`harden.sql`, `allowlist.sql`, `jobs.sql`, `points.sql`, `security.sql` and `redeem.sql` are
+new — see each file's header for why. Replaying them against the live project is a no-op, so
+the schema can be rebuilt from this repo alone.
 
 ### Scheduled jobs
 
@@ -87,8 +91,22 @@ npm run build          # rebuild deploy/index.html from design/
 npm run verify-build   # assert the transform reproduces the originally shipped bundle
 npm run check-bundle   # assert the committed bundle matches design/
 npm run serve          # http://127.0.0.1:8765
-npm run smoke          # headless load: no console errors, no external requests
+npm run smoke          # eight Playwright suites (needs `npm run serve` in another shell)
 ```
+
+`npm run smoke` drives the built bundle in a real browser. Only `BloomAPI`'s network calls are
+stubbed; the component, its state and the whole template are the real thing.
+
+| Suite | Covers |
+|---|---|
+| `smoke.mjs` | cold load: no console errors, no external requests |
+| `inbox-smoke.mjs` | the central inbox loads and gates on role |
+| `inbox-render.mjs` | inbox cards, sorting, filters, save and rollback |
+| `rescue.mjs` | the "the link didn't work" paste flow and its error copy |
+| `link-safety.mjs` | the **real** `completeSignIn` against foreign links and tokens |
+| `app-signed-in.mjs` | all four steps as a signed-in principal |
+| `sheets.mjs` | every support sheet, the urgent request, the PDF export |
+| `timezone.mjs` | the week written is a Monday from UTC-11 to UTC+14 |
 
 Two guards make the build trustworthy. `verify-build` re-runs the transform on the pristine
 design file (`build-reference.dc.html`) and compares against a pinned sha256 of the bundle as
@@ -106,7 +124,10 @@ inactive perks and 7 allow-list rows.
 - `workload ×3, staffing ×1, behaviour ×1` → `current: [{workload,3}]`, `suppressed: 2`.
   Themes chosen by one school are never named.
 - One school, one pulse → `current: []`, `suppressed: 1`, `included: 1`. The client re-adds
-  the principal's own theme locally, so their chip still reads correctly.
+  the principal's own theme locally, so their chip still reads correctly. Since the aggregate
+  stopped counting the caller's own school it **adds** one rather than flooring at one, so a
+  theme two other schools picked reads 3. The one case it under-reports — exactly one other
+  school sharing the theme — is the privacy rule working, and erring low is the safe side.
 - Four-week series zeroes sub-threshold cells: `workload [0,2,2,3]`.
 
 **Access control**
@@ -166,6 +187,70 @@ data was deleted afterwards; the database holds only the reference rows and the 
 | **`tailor` on safeguarding** | `declined` in **1 ms** — the hard block fires before any model call, so it holds even with no API key set |
 | `tailor` on a normal topic, no key | `{status:'error'}`, which the client renders as the default idea |
 | `ai_tailor_log` | logged `declined` and `error` with school and latency, and its columns cannot hold a note or output |
+
+### Security review
+
+A review after the first end-to-end pass found one serious flaw and three lesser ones. All
+are fixed and the fixes are verified against the live API with real JWTs. `security.sql` and
+`redeem.sql` carry the full reasoning; the short version:
+
+**The k=2 rule was defeatable by writing, not reading.** Nothing constrained which *week* a
+principal could write a pulse for, and `network_pulse()` counted the caller's own school. So
+a principal could submit a theme and watch a suppressed cell of 1 turn into a visible 2 —
+which names another school's private theme. Fourteen topics, fourteen probes, and every other
+school's answer falls out; each back-dated pulse also minted 10 points redeemable for real
+partner codes. Two independent fixes, either sufficient on its own: a pulse may only be
+written for the current week, and the aggregate now counts **other schools only**.
+
+Verified with two principals at different schools:
+
+| Attack | Result |
+|---|---|
+| Back-date a pulse to a past week | `403` — new row violates row-level security policy |
+| Submit the theme the other school chose (legitimate, current week) | `201` |
+| Read the aggregate back | `current: []`, `suppressed: 1` — the theme is **still hidden** |
+
+**A request could be filed pre-closed.** `insert own request` did not pin `status` or
+`assigned_to`, so a principal could file a request already closed and already assigned to a
+named colleague — into the central inbox, never to be looked at. Now pinned to
+`status = 'new'` and `assigned_to is null`. Verified: `403`.
+
+**Triage could rewrite ownership.** The central-update policy allows updating any request,
+which triage needs, but an RLS `WITH CHECK` cannot compare against the old row — so a request
+could be moved to another school or re-attributed. A `BEFORE UPDATE` trigger now pins
+`school_id`, `created_by`, `ref` and `week_start`, and sets `updated_at` server-side. Verified:
+`403` on each.
+
+**Two perks could be bought with one balance.** `redeem` read the balance, decided, then
+wrote. Two requests for *different* perks arriving together both passed the check, so a
+school with 30 points could walk away with 60 points of real partner codes; the debit's own
+error was also discarded, which could leave a valid code paid for with nothing. Both writes
+now happen inside `redeem_perk()` behind a per-school advisory lock. Verified: 25 points, two
+perks at 20 — first `ok` with balance 5, second `insufficient`, one code issued, one debit row.
+
+**The rescue paste box installed any session it was given.** "The link didn't work" takes a
+link from wherever the principal got it, so anyone who could get a link in front of one could
+sign them into an account of their choosing — and every pulse and note they then wrote would
+land in that account's school. The address itself cannot be checked (the whole point of the
+rescue is a link that landed on the wrong origin), so the *token* is: it must have been issued
+by this Supabase project, and a raw email link must point at this project's auth host. That
+leaves only a session minted by this project, which the allow-list limits to a known group.
+The box now also says so in plain words. `link-safety.mjs` runs the real `completeSignIn`
+against nine inputs, including a lookalike host and an issuer-prefix trick.
+
+**Accepted, not fixed** — each is a deliberate call, not an oversight:
+
+- The allow-list is an enumeration oracle: an unlisted address errors differently from a
+  listed one, so someone could test whether a given address is on the pilot. Five schools,
+  known people; hiding it would mean showing "check your email" to people who will never get
+  one.
+- `admin` can see which school asked about which theme, via `ai_tailor_log`. That table exists
+  to meter and audit the AI proxy and holds no note or output. Central staff cannot read it.
+- Supabase's linter flags `my_role()`, `my_school()` and `network_pulse()` as SECURITY DEFINER
+  functions callable by signed-in users. That is what they are for: the first two return the
+  caller's own role and school, and `network_pulse()` is the aggregate the app is built on.
+  Its "leaked password protection disabled" warning does not apply — there are no passwords,
+  only magic links.
 
 ## Hosting
 

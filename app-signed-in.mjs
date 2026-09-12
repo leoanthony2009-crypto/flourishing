@@ -45,9 +45,11 @@ await page.addInitScript(({ SAN, monday }) => {
   ]);
   A.myPulse = async () => null;                       // nothing submitted yet this week
   A.myPulseHistory = async () => ([{ week_start: monday }]);
-  // Exactly the shape the live RPC returned: one named theme, one suppressed.
+  // Exactly the shape the live RPC returned: one named theme, one suppressed. The counts are
+  // OTHER schools only — network_pulse() stopped counting the caller's own school, which is
+  // what closed the write-probe on the minimum-cell rule. `included` still counts everyone.
   A.networkPulse = async () => ({
-    week_start: monday, included: 3, schools_total: 5, min_cell: 2,
+    week_start: monday, included: 3, schools_total: 5, min_cell: 2, excludes_self: true,
     current: [{ topic:'workload', count:2 }], previous: [],
     four_weeks: [{ topic:'workload', counts:[0,0,0,2] }], suppressed: 1,
   });
@@ -101,7 +103,9 @@ t = await txt();
 const step3 = {
   reached: t.includes('Try this today') || t.includes('Tailor this idea'),
   hasSupportRoutes: t.includes('I need central-team support'),
-  chipReflectsAggregate: /2 of 5 schools chose this theme/.test(t),
+  // Two other schools chose workload and so did this one: three. Reading 2 here would mean
+  // the client was flooring the aggregate at one instead of adding its own pulse to it.
+  chipReflectsAggregate: /3 of 5 schools chose this theme/.test(t),
 };
 await shot('step3');
 

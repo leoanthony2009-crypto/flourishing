@@ -37,7 +37,7 @@ for (const [tz] of ZONES) {
         v.listPerks = async () => ([]);
         v.myPulse = async () => null;
         v.myPulseHistory = async () => ([]);
-        v.networkPulse = async (wk) => { window.__netWeek = wk; return { week_start: wk, included:0, schools_total:5, current:[], previous:[], four_weeks:[], suppressed:0 }; };
+        v.networkPulse = async (wk) => { window.__netWeek = wk; return { week_start: wk, included:0, schools_total:5, excludes_self:true, current:[], previous:[], four_weeks:[], suppressed:0 }; };
         v.listLedger = async () => ([]); v.listRedemptions = async () => ([]);
         v.listShared = async () => ([]); v.listRequests = async () => ([]);
         v.upsertPulse = async (p) => { window.__week = p.weekStart; return {}; };
