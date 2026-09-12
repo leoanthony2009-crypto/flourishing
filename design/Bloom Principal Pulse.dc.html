@@ -24,6 +24,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Bloom Pulse">
 <script>
+// The app has to open on bad school wifi, or a weekly habit never forms. sw.js caches
+// same-origin static assets only and never touches a Supabase response — those are scoped to
+// one school by RLS, and a cached copy on a handed-over device is a leak RLS cannot help with.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').catch(function () { /* offline support is a bonus, never a blocker */ });
+  });
+}
+</script>
+<script>
 // <html lang> cannot be declared here — this block lands inside <head> — and the replacement
 // documentElement carries no attributes, so it is set after the swap. Screen readers need it
 // to choose a voice; without it they guess, and Trinidad & Tobago English is not the guess.
@@ -484,7 +494,11 @@ textarea{resize:none}
 
     <div style="display:flex;gap:10px;padding:12px 14px;background:#F0ECF6;border-radius:12px;font-size:13px;line-height:1.45;color:#454A68;">{{ ic.lock }}<span><strong style="color:#14224A;font-weight:600;">Invited principals only.</strong> Sign-in works for the five Bloom school addresses and the central team. Your note stays with your school — it is never shown to colleagues or the central team.</span></div>
 
-    <a href="https://bloomtt.netlify.app/" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;font-size:14px;font-weight:600;color:#1E3A78;text-decoration:none;min-height:44px;line-height:44px;" style-hover="text-decoration:underline" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Our mission ↗</a>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+      <a href="https://bloomtt.netlify.app/" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;font-size:14px;font-weight:600;color:#1E3A78;text-decoration:none;min-height:44px;line-height:44px;" style-hover="text-decoration:underline" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Our mission ↗</a>
+      <span aria-hidden="true" style="color:#D8D2E4;">·</span>
+      <a href="/privacy" style="display:block;text-align:center;font-size:14px;font-weight:600;color:#1E3A78;text-decoration:none;min-height:44px;line-height:44px;" style-hover="text-decoration:underline" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Privacy</a>
+    </div>
 
     <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
     <button type="button" onClick="{{ sendLink }}" disabled="{{ authDisabled }}" style="min-height:50px;border-radius:999px;border:none;background:{{ authBtnBg }};color:{{ authBtnFg }};font-size:15px;font-weight:600;margin-top:auto;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ authBtnLabel }}</button>
@@ -635,10 +649,27 @@ textarea{resize:none}
             <div style="font-size:14px;font-weight:600;margin-bottom:8px;">About Bloom</div>
             <a href="https://bloomtt.netlify.app/" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Our mission ↗</a>
             <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Flourishing in Mission — the Bloom principals' resources site. Opens in a new tab.</p>
+            <a href="/privacy" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;min-height:44px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#1E3A78;font-size:14px;font-weight:600;text-decoration:none;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Privacy &amp; your data</a>
           </div>
           <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
             <button type="button" onClick="{{ resetDemo }}" style="min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #D8D2E4;background:transparent;color:#14224A;font-size:14px;font-weight:500;" style-hover="background:#F0ECF6" style-focus="outline:3px solid #1E3A78;outline-offset:2px">{{ resetLabel }}</button>
             <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#666A80;">Ends your session on this device. Your pulses, requests, points and shared resources stay on your school’s account.</p>
+          </div>
+          <div style="border-top:1px solid #E6E2EB;padding-top:14px;">
+            <button type="button" onClick="{{ toggleDelete }}" aria-expanded="{{ delOpen }}" style="min-height:44px;padding:0;border:none;background:transparent;color:#8A6614;font-size:14px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">Delete my account and data</button>
+            <sc-if value="{{ delOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;padding:14px;border-radius:14px;background:#F8F3E8;">
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#14224A;"><strong style="font-weight:600;">Deleted for good:</strong> your sign-in, your profile, every note you have written, and any request you sent the central team. This week’s pulse is withdrawn, so your school can submit again.</p>
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#454A68;"><strong style="color:#14224A;font-weight:600;">Kept:</strong> the themes your school picked in earlier weeks, with your name and your words removed. Four other schools have already seen those counts, and your points stay with the school.</p>
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#8A6614;">This cannot be undone. There is no copy.</p>
+              <label for="del-word" style="font-size:13px;font-weight:600;color:#14224A;">Type DELETE to confirm</label>
+              <input id="del-word" type="text" autoComplete="off" autoCapitalize="characters" value="{{ delWord }}" onChange="{{ setDelWord }}" style="display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:14px;outline:none;" style-focus="border-color:#8A6614;box-shadow:0 0 0 3px #FFFEF9" />
+              <sc-if value="{{ delError }}" hint-placeholder-val="{{ false }}">
+                <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">{{ delErrorText }}</p>
+              </sc-if>
+              <button type="button" onClick="{{ confirmDelete }}" disabled="{{ delDisabled }}" style="min-height:46px;border-radius:999px;border:none;background:{{ delBtnBg }};color:{{ delBtnFg }};font-size:14px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ delBtnLabel }}</button>
+            </div>
+            </sc-if>
           </div>
         </div>
       </sc-if>
@@ -855,6 +886,7 @@ class Component extends DCLogic {
     // Staff password sign-in, revealed only by ?staff=1. Read once, at construction, so a
     // later history.replaceState (the link-error cleanup does one) cannot switch it off.
     staffMode: /[?&]staff=1(&|$)/.test(window.location.search), password:'', pwBusy:false,
+    delOpen:false, delWord:'', delBusy:false, delError:'',
     // What the server holds, as distinct from what is currently being edited.
     savedTopic:null, savedNote:'', myWeeks:[],
     schools:[], perkRows:[], net:null, ledger:[], points:0, streak:0, shared:[], requests:[],
@@ -1467,7 +1499,48 @@ class Component extends DCLogic {
       // Was "Reset demo data". With server-backed data the equivalent is ending the session;
       // only the device-local draft is cleared here.
       resetLabel: 'Sign out',
+      delOpen: s.delOpen, delWord: s.delWord,
+      toggleDelete: () => this.setState(st => ({ delOpen: !st.delOpen, delWord:'', delError:'' })),
+      setDelWord: e => this.setState({ delWord: e.target.value, delError:'' }),
+      delDisabled: s.delBusy || s.delWord.trim().toUpperCase() !== 'DELETE',
+      delBtnBg: (s.delBusy || s.delWord.trim().toUpperCase() !== 'DELETE') ? '#D8D2E4' : '#8A6614',
+      delBtnFg: (s.delBusy || s.delWord.trim().toUpperCase() !== 'DELETE') ? '#5A5E74' : PAPER,
+      delBtnLabel: s.delBusy ? 'Deleting…' : 'Delete everything',
+      delError: !!s.delError, delErrorText: s.delError,
+      confirmDelete: async () => {
+        // Synchronous guard, like the other write paths: a render-time flag is read stale when
+        // taps land inside one frame, and this is the one action nobody should do twice.
+        if (this._deleting || s.delWord.trim().toUpperCase() !== 'DELETE') return;
+        this._deleting = true;
+        this.setState({ delBusy:true, delError:'' });
+        try {
+          await BloomAPI.deleteAccount(s.delWord.trim());
+          try {
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage('bloom-clear-cache');
+            }
+            localStorage.removeItem('bloom-pulse-draft:' + (s.schoolId || 'none'));
+          } catch (e) {}
+          // Reload rather than re-render: the session is backed by a user that no longer
+          // exists, and every cached bit of their data should go with it.
+          window.location.replace(window.location.pathname);
+        } catch (e) {
+          this._deleting = false;
+          const m = (e && e.message) || '';
+          this.setState({ delBusy:false, delError:
+            /not confirmed/i.test(m) ? 'Type DELETE exactly to confirm.'
+            : /partial/i.test(m) ? 'Your data was removed but the sign-in is still being cleared. Contact the central team.'
+            : 'Couldn’t delete the account just now. Check your connection and try again.' });
+        }
+      },
       resetDemo: async () => {
+        // Drop the cached shell too. On a device passed between people, leaving the last
+        // signed-in school's app state behind is exactly what this product must not do.
+        try {
+          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage('bloom-clear-cache');
+          }
+        } catch (e) {}
         try { localStorage.removeItem('bloom-pulse-draft:' + (s.schoolId || 'none')); } catch (e) {}
         this.setState({ sheet:null, topic:null, impact:null, note:'', saved:false, skipped:false, screen:1, checks:{}, cType:null, cContext:'', cHelp:'', cSent:false, ai:{ key:null, status:'idle', data:null, error:'' } });
         await BloomAPI.signOut();

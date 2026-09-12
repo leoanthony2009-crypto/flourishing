@@ -135,6 +135,18 @@
       return d ? d.charAt(0).toUpperCase() + d.slice(1) + '.'
                : 'That sign-in link didn’t work. Enter your address and we’ll send a new one.';
     },
+    // Account deletion. Required by both app stores, and right regardless: a principal who
+    // wrote notes about their own staff should be able to take them back. The subject is the
+    // caller's own JWT — there is no id to pass — so this cannot be pointed at anyone else.
+    // The typed word is checked again server-side; the client is not the gate.
+    deleteAccount: async function (confirmWord) {
+      var c = await ready(); if (!c) throw new Error('offline');
+      var res = await API.invoke('delete-account', { confirm: String(confirmWord || '') });
+      // The session is now backed by a user that no longer exists. Clear it locally rather
+      // than leave a token that fails on every subsequent call.
+      try { await c.auth.signOut(); } catch (e) {}
+      return res;
+    },
     // Password sign-in, for the central team testing the app without waiting on the mailer.
     // Not a bypass of anything: it produces an ordinary Supabase session for that user, so
     // their role and every RLS policy apply exactly as they do after a magic link. Only

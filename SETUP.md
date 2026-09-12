@@ -110,6 +110,8 @@ stubbed; the component, its state and the whole template are the real thing.
 | `a11y.mjs` | what survives the documentElement swap, names, targets, dialog focus |
 | `edge-cases.mjs` | double-submit, hostile open text, session lost mid-writing |
 | `more-help.mjs` | every More help sheet cites its evidence; the external AI declares its limits |
+| `offline.mjs` | the app opens offline, and the cache holds nothing per-school |
+| `delete-account.mjs` | deletion is collapsed, honest, confirmation-gated and single-shot |
 
 `npm run check` also runs two suites against the edge function's own modules under Node, so
 they test the deployed code rather than a copy:
@@ -308,6 +310,55 @@ and stay protected, which is the sensible default.
 
 If you later add a custom domain it is exempt too, and if you ever want the team-slug URLs open
 as well, set Vercel Authentication to *Only Preview Deployments*.
+
+### Offline, deletion and privacy — the store-readiness work
+
+**This is a PWA, not a native app.** It cannot go to Apple's App Store as a URL, and Guideline
+4.2 (*Minimum Functionality*) rejects a site bundled as an app. Google Play is reachable via a
+Trusted Web Activity. The three items below were the blockers common to both, and are the right
+thing for the pilot regardless.
+
+**Offline.** `deploy/sw.js` caches the app shell so the app opens on bad school wifi instead of
+showing a browser error — an app built around a weekly habit cannot fail on Monday morning. The
+rule that matters is not about caching: **every Supabase response is scoped to one school by
+RLS, so a cached copy on a handed-over device would be a leak RLS cannot help with.** The worker
+therefore touches same-origin static assets only and never inspects or stores an API response;
+anything cross-origin falls straight through. Navigations are network-first so a new deploy is
+never shadowed by a stale 3MB bundle, with the cache as the fallback. Sign-out and account
+deletion both post `bloom-clear-cache` to it. `offline.mjs` asserts the app renders with the
+network off *and* that no `supabase.co` URL is ever in the cache.
+
+**Account deletion** (`delete-account/`, `delete-account.sql`). Apple 5.1.1(v) and Google Play
+both require it. The hard question was what "delete my account" means when the data is
+school-level — a pulse row is the school's contribution to a view four other schools read.
+The split is drawn at authorship:
+
+| | |
+|---|---|
+| **Deleted** | the sign-in, the profile, every note they wrote, every support request they sent |
+| **Withdrawn** | the current week's pulse, entirely — it is their own answer and not yet settled history, and leaving an anonymous row would lock the school out of the week (the update policy needs `submitted_by = auth.uid()` and the unique key blocks a fresh insert) |
+| **Kept, anonymised** | earlier weeks' themes, with note and author removed. Points stay with the school, because the perks they buy belong to the school |
+
+Three real defects surfaced while testing this against the live API:
+
+- `support_requests.assigned_to` also references `auth.users` with no cascade, so **a
+  central-team member who had claimed even one request could never be deleted** — the FK
+  refused it. The claim is now released back to the inbox.
+- `pulses.submitted_by` was `NOT NULL`, so a pulse could not be anonymised in place at all.
+  The column is now nullable, and null means "the author deleted their account". New rows are
+  unaffected: the insert policy still requires `submitted_by = auth.uid()`.
+- The edge function reports `partial` rather than success if the data scrub lands but the auth
+  user delete fails, so a half-finished deletion is never reported as done.
+
+Verified end to end with a throwaway account: login and profile gone, current-week pulse
+withdrawn, past pulse kept with note stripped and author null, their own request deleted,
+another school's request kept with the claim released.
+
+**Privacy policy** (`deploy/privacy.html`, linked from the sign-in screen and the Account
+sheet, and cached for offline). Written from the schema rather than from a template, so the
+retention periods are the ones `purge_expired()` actually enforces (24 / 36 / 12 months) and
+the claim that central staff cannot read pulse notes is the one tested with real central-team
+credentials. It also states plainly that *Ask POUI GPT* leaves Bloom entirely.
 
 ### Accessibility
 
