@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-TT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F5F0">
+<title>Privacy — Bloom Principal Pulse</title>
+<link rel="icon" href="/icon-192.png" type="image/png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#F6F5F0;color:#14224A;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.55;padding:24px 20px 64px}
+  main{max-width:680px;margin:0 auto}
+  h1{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:30px;line-height:1.15;margin:0 0 6px}
+  h2{font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:20px;margin:30px 0 8px}
+  p,li{font-size:15px;color:#3A3F58;margin:0 0 10px}
+  ul{padding-left:20px}
+  .lede{font-size:16px;color:#454A68}
+  .meta{font-size:13px;color:#666A80;margin-bottom:22px}
+  table{width:100%;border-collapse:collapse;margin:10px 0 14px;font-size:14px}
+  th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid #E6E2EB}
+  th{color:#14224A;font-weight:600;background:#F0ECF6}
+  .callout{background:#F0ECF6;border-radius:12px;padding:14px 16px;margin:14px 0;font-size:14px;color:#14224A}
+  a{color:#1E3A78}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid #E6E2EB;font-size:13px;color:#666A80}
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <p class="meta">Bloom Principal Pulse · for the five Bloom Academy schools in Trinidad &amp; Tobago · last updated 12 September 2026</p>
+
+  <p class="lede">This app asks a principal one question a week. The answer is deliberately small, and most of this page is about what is <em>not</em> collected and who cannot see what.</p>
+
+  <h2>Who runs it</h2>
+  <p>Bloom Academy / CEBM operates this app for principals at its five schools and its own central team. It is not open to the public and there is no sign-up: only addresses on the pilot list can sign in. Questions: <strong>+1 868-607-2326</strong>.</p>
+
+  <h2>What is collected</h2>
+  <table>
+    <tr><th>What</th><th>Why</th></tr>
+    <tr><td>Your email address</td><td>To sign you in and tie you to your school. Sign-in is a one-time link — there is no password.</td></tr>
+    <tr><td>Your school and role</td><td>To decide what you can see. Every query is filtered by your school in the database itself.</td></tr>
+    <tr><td>Your weekly pulse: one theme, how much it is affecting you, and an optional note</td><td>The theme and impact feed an anonymised count across schools. The note is for you.</td></tr>
+    <tr><td>Support requests you send the central team</td><td>So someone can respond. You choose what to put in them.</td></tr>
+    <tr><td>Resources you save, points and any perk codes</td><td>To show your school's library and rewards.</td></tr>
+    <tr><td>A record that AI tailoring ran: your school, the theme, the model and how long it took</td><td>To meter a daily limit and to audit the AI. <strong>Your note and the AI's answer are never stored.</strong></td></tr>
+  </table>
+  <p>No analytics, no advertising, no tracking pixels, no third-party cookies, no location, and no device identifiers.</p>
+
+  <h2>Who can see your note</h2>
+  <div class="callout">
+    <p style="margin:0"><strong>The central team cannot read pulse notes.</strong> This is enforced in the database, not by policy: central and admin accounts have no permission to select from the pulses table at all. It has been tested with real central-team credentials.</p>
+  </div>
+  <ul>
+    <li><strong>You and anyone else signed in for your school</strong> can see your school's pulses, including notes.</li>
+    <li><strong>Other schools</strong> can never see your note, and can never see which theme your school chose. They see counts only.</li>
+    <li><strong>The central team</strong> sees support requests you send them — and nothing else about your week.</li>
+  </ul>
+
+  <h2>The counts other schools see</h2>
+  <p>The network view is aggregated and suppressed. A theme chosen by fewer than <strong>two</strong> schools is never named — it is reported only as "1 further theme not shown to protect privacy". The aggregate also excludes your own school from the counts it returns to you, so nobody can work out another school's answer by submitting theirs and watching a number move.</p>
+
+  <h2>Where it is held, and who processes it</h2>
+  <ul>
+    <li><strong>Supabase</strong> — the database and sign-in, hosted in the United States (us-east-1).</li>
+    <li><strong>Vercel</strong> — serves the app itself. It receives no pulse data.</li>
+    <li><strong>Anthropic</strong> — only when you press <em>Tailor this idea</em>. Your note and the theme are sent to produce that one answer, and are not used to train models. If you never press it, nothing is sent.</li>
+  </ul>
+  <p><strong>Ask POUI GPT</strong> is different: it opens ChatGPT, which is outside Bloom entirely. Anything you type there is governed by OpenAI's terms, not this policy, and it cannot see your pulse.</p>
+
+  <h2>How long it is kept</h2>
+  <table>
+    <tr><th>Data</th><th>Deleted after</th></tr>
+    <tr><td>Pulses, including notes</td><td>24 months</td></tr>
+    <tr><td>Support requests</td><td>36 months</td></tr>
+    <tr><td>AI tailoring records (no note, no answer)</td><td>12 months</td></tr>
+  </table>
+  <p>This runs automatically on the first of each month. It is not a manual promise.</p>
+
+  <h2>Deleting your account</h2>
+  <p>In the app, open <strong>Account settings</strong> (the icon at the top right) and choose <strong>Delete my account and data</strong>. You type DELETE to confirm. It cannot be undone and there is no archived copy.</p>
+  <ul>
+    <li><strong>Deleted:</strong> your sign-in, your profile, every note you have written, and every support request you sent. The current week's pulse is withdrawn entirely, so your school can submit again.</li>
+    <li><strong>Kept, with your name and words removed:</strong> the themes your school picked in earlier weeks. Four other schools have already seen those counts and the four-week trend is built from them, so they stay as anonymous school-level facts. Points stay with the school.</li>
+  </ul>
+  <p>If you would rather not do it yourself, ask the central team on +1 868-607-2326 and they will do it for you.</p>
+
+  <h2>Your rights</h2>
+  <p>You can ask to see what is held about you, correct it, or have it deleted, under Trinidad &amp; Tobago's Data Protection Act. Ask the central team, or use the in-app deletion above. Your weekly pulse is voluntary — you can skip any week, and skipping is recorded as a skip, not as an answer.</p>
+
+  <h2>Safeguarding</h2>
+  <p>This app is not a route for child-protection concerns and its AI will refuse them. Follow your school's child-protection protocol and contact the Children's Authority. The <em>Urgent</em> option under "I need central-team support" reaches a person, but it is not a substitute for that protocol.</p>
+
+  <h2>Changes</h2>
+  <p>If what is collected or who can see it changes, this page changes with it and principals are told directly.</p>
+
+  <footer>
+    <a href="/">← Back to Bloom Principal Pulse</a>
+  </footer>
+</main>
+</body>
+</html>
