@@ -40,6 +40,20 @@
     return res ? res.data : null;
   }
 
+  // Reads the `iss` claim of an access token without trusting it for anything else — the
+  // server still validates the signature. This only decides whether a pasted token is even
+  // worth handing to setSession, so a malformed one is simply "not ours".
+  function issuedByProject(jwt, projectOrigin) {
+    try {
+      var part = String(jwt).split('.')[1];
+      if (!part) return false;
+      var b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var claims = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      return typeof claims.iss === 'string' && claims.iss.indexOf(projectOrigin + '/') === 0;
+    } catch (e) { return false; }
+  }
+
   var API = {
     configured: function () { return !!(CONFIG.url && CONFIG.key); },
     ready: ready,
@@ -78,19 +92,31 @@
     //   the URL it landed on           http://localhost:3000/#access_token=...&refresh_token=...
     completeSignIn: async function (pasted) {
       var c = await ready(); if (!c) throw new Error('offline');
-      var url;
+      var url, project;
       try { url = new URL(String(pasted || '').trim()); } catch (e) { throw new Error('bad_link'); }
+      try { project = new URL(CONFIG.url).origin; } catch (e) { throw new Error('offline'); }
 
       // Already-verified link: the session is sitting in the fragment.
       var frag = new URLSearchParams((url.hash || '').replace(/^#/, ''));
       var access = frag.get('access_token'), refresh = frag.get('refresh_token');
       if (access && refresh) {
+        // This box installs whatever session it is given, so anyone who can get a link in
+        // front of a principal can sign that principal into an account of their choosing —
+        // and every write the principal then makes lands in that account's school. The
+        // address cannot be checked (the whole point of the rescue is a link that landed on
+        // the wrong origin, usually localhost), so check the token instead: it must have been
+        // issued by this Supabase project. That leaves only a session minted by this project,
+        // which the pilot allow-list already limits to a known, named group of people.
+        if (!issuedByProject(access, project)) throw new Error('foreign_link');
         var set = await c.auth.setSession({ access_token: access, refresh_token: refresh });
         if (set.error) throw set.error;
         return set.data;
       }
 
       // Unclicked link: exchange the token for a session directly, no redirect involved.
+      // The email's link always points at this project's auth endpoint; anything else is not
+      // a Bloom sign-in link, whatever it claims.
+      if (url.origin !== project) throw new Error('foreign_link');
       var token = url.searchParams.get('token_hash') || url.searchParams.get('token');
       if (!token) throw new Error('bad_link');
       var res = await c.auth.verifyOtp({ token_hash: token, type: url.searchParams.get('type') || 'magiclink' });

@@ -21,23 +21,26 @@ serve(async (req) => {
   const { data: prof } = await sb.from('profiles').select('school_id').eq('user_id', user.id).single();
   if (!prof?.school_id) return json({ error: 'no school' }, 403);
 
-  const { perk_id } = await req.json();
-  const { data: perk } = await sb.from('perks').select('*').eq('id', perk_id).eq('active', true).single();
-  if (!perk) return json({ error: 'perk not available' }, 404);
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { return json({ error: 'bad request' }, 400); }
+  const perk_id = String(body.perk_id ?? '');
+  if (!perk_id) return json({ error: 'bad request' }, 400);
 
-  const { data: existing } = await sb.from('redemptions').select('code, expires_at').eq('school_id', prof.school_id).eq('perk_id', perk_id).maybeSingle();
-  if (existing) return json({ code: existing.code, expires_at: existing.expires_at, already: true });
+  // The check and both writes happen inside redeem_perk(), behind a per-school lock. Doing
+  // them here meant two requests for different perks could both read the same balance, both
+  // pass, and both issue a real partner code; and a failed debit left a paid-for code behind.
+  const { data, error } = await sb.rpc('redeem_perk', {
+    p_school: prof.school_id, p_perk: perk_id, p_code: code(perk_id),
+  });
+  if (error) { console.error('redeem_perk failed', error.message); return json({ error: 'redeem failed' }, 500); }
 
-  const { data: ledger } = await sb.from('points_ledger').select('delta').eq('school_id', prof.school_id);
-  const balance = (ledger ?? []).reduce((a, r) => a + r.delta, 0);
-  if (balance < perk.cost) return json({ error: 'insufficient points', balance, cost: perk.cost }, 402);
-
-  const expires_at = new Date(Date.now() + perk.valid_days * 86400_000).toISOString();
-  const c = code(perk.id);
-  const { error: e1 } = await sb.from('redemptions').insert({ school_id: prof.school_id, perk_id, code: c, expires_at });
-  if (e1) return json({ error: e1.message }, 500);
-  await sb.from('points_ledger').insert({ school_id: prof.school_id, kind: 'redeem', delta: -perk.cost, ref: c });
-  return json({ code: c, expires_at, balance: balance - perk.cost });
+  switch (data?.status) {
+    case 'ok':           return json({ code: data.code, expires_at: data.expires_at, balance: data.balance });
+    case 'already':      return json({ code: data.code, expires_at: data.expires_at, already: true });
+    case 'unavailable':  return json({ error: 'perk not available' }, 404);
+    case 'insufficient': return json({ error: 'insufficient points', balance: data.balance, cost: data.cost }, 402);
+    default:             return json({ error: 'bad request' }, 400);
+  }
 });
 
 function json(b: unknown, status = 200) {
