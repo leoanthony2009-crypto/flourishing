@@ -241,11 +241,22 @@ Then, to bring people on:
    at the foot of `allowlist.sql`. `leoanthony2009@gmail.com` is already listed as `admin`
    against Port of Spain, so the app is usable as soon as step 2 is done.
 
-4. **Invite them** — Authentication → Users → Invite. The hook creates each profile
-   automatically from the allow-list row; there is no second step.
+4. **No invite needed.** Anyone on `pilot_allowlist` signs in by entering their address:
+   the `on_auth_user_created` hook rejects anyone who is not listed and creates the profile,
+   with the right school and role, for anyone who is. Both halves verified against the live
+   API — an unlisted address gets `500` with **zero** `auth.users` rows created.
 
-5. **Custom SMTP** — the built-in mailer is rate-limited to a handful of messages an hour and
-   is not meant for real delivery. Needed before five principals rely on a Monday email.
+5. **Custom SMTP — the one thing that will actually stop the pilot.** Authentication →
+   Emails → SMTP Settings, with Resend, Postmark or SES.
+
+   This is not theoretical: during testing the built-in mailer returned **`429` on the second
+   sign-in request within the hour**. Five principals signing in on a Monday morning would
+   mean three of them getting nothing, with no clue why. It is also documented as
+   development-only and may refuse addresses outside your Supabase organisation entirely.
+
+   The client now tells the difference — a rate-limited send reads "Too many sign-in emails
+   just now. Wait a few minutes and try again" rather than blaming the allow-list — but that
+   is damage control, not a fix.
 
 6. **Perks** stay in "Term 2 preview" while every row has `active = false`. Set `active = true`
    when a partner signs; no client change is needed.
