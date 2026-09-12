@@ -107,10 +107,23 @@ stubbed; the component, its state and the whole template are the real thing.
 | `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
 | `staff-signin.mjs` | the `?staff=1` password route: hidden by default, real session when used |
 
-`npm run check` also runs `tailor-compose.mjs`, which drives the edge function's own
-`compose()` and `ungrounded()` under Node: all three sources present, the note carried
-verbatim, no raw enum leaking into the prompt, a quoted figure kept but an invented one
-rejected, and hostile input bounded.
+`npm run check` also runs two suites against the edge function's own modules under Node, so
+they test the deployed code rather than a copy:
+
+- `tailor-compose.mjs` — all three sources present, the note carried verbatim, no raw enum
+  leaking into the prompt, and hostile input bounded.
+- `tailor-outputs.mjs` — the accept/reject boundary, using realistic tailored answers. A
+  concrete, correctly grounded idea must survive validation and still name the specific class
+  or team after the word limits are applied; an invented percentage, an inserted link, or an
+  appeal to research we never supplied must not.
+
+That second suite exists because of a bug it would have caught on day one. The grounding
+guard banned the phrase "effect size" unconditionally — and the `teaching` topic's own
+evidence reads *"an effect size of about 0.84"*. So on one of the most-chosen themes, an
+answer that grounded itself in the supplied material exactly as instructed was binned as
+`rejected` every single time, and the principal saw the generic default. The authority and
+percentage checks are now conditional on the phrase being absent from what was actually sent;
+links and phone numbers stay banned outright.
 | `app-signed-in.mjs` | all four steps as a signed-in principal |
 | `sheets.mjs` | every support sheet, the urgent request, the PDF export |
 | `timezone.mjs` | the week written is a Monday from UTC-11 to UTC+14 |

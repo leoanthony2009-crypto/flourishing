@@ -17,15 +17,27 @@ export const list = (v, n, max = 200) =>
 export const clean = (v, max) =>
   String(v ?? '').trim().replace(/^[“"]|[”"]$/g, '').split(/\s+/).slice(0, max).join(' ');
 
-const hasPct = (s) => /\d+(\.\d+)?\s?%/.test(s);
+// Never legitimate in a tailored idea, whatever the grounding says: the app supplies its own
+// crisis numbers and never asks a principal to follow a link.
+const FORBIDDEN = /https?:|www\.|\b\d{3}[- ]\d{4}\b/i;
+// Appeals to authority and figures. These are only a problem when they are NOT in the material
+// we supplied — quoting what we gave the model is the whole point of grounding it.
+const AUTHORITY = /effect size|\bstud(y|ies)\b|research shows|according to/i;
+const PERCENT = /\d+(\.\d+)?\s?%/;
+const invented = (re, out, corpus) => re.test(out) && !re.test(corpus);
 
 // The corpus is everything we actually sent, not just base.evidence. Narrowing it to the
 // evidence line meant a figure quoted from the T&T context or the colleague material read as
 // invented, and a sound answer was binned as "rejected".
+//
+// The authority check used to be unconditional, which was outright broken: the `teaching`
+// topic's own evidence reads "an effect size of about 0.84", so an answer that grounded itself
+// in the material exactly as instructed was thrown away every time. A phrase counts against
+// the model only when it did not come from us.
 export const ungrounded = (out, corpus) =>
-  /https?:|www\.|\b\d{3}[- ]\d{4}\b/i.test(out) ||
-  (/effect size|\bstud(y|ies)\b|research shows|according to/i.test(out)) ||
-  (hasPct(out) && !hasPct(corpus));
+  FORBIDDEN.test(out) ||
+  invented(AUTHORITY, out, corpus) ||
+  invented(PERCENT, out, corpus);
 
 export function compose({ topic, impact, note, base, more, signal }) {
   const checklist = list(more?.checklist, 6);
