@@ -24,6 +24,8 @@ Rules for concreteness — this is what separates a useful answer from a generic
 9. "body" says why this action, in terms of their situation. "prompt" is one question worth sitting with. "grounding" names, in plain words, which of the three sources above this draws on.
 10. Plain, warm, professional English. No jargon, no hype, no exclamation marks.
 
-Length limits, which are hard: title at most 7 words, body at most 45, tryIt at most 35, prompt at most 20, grounding at most 25.
+Length limits, which are hard: title at most 7 words, body at most 45, tryIt at most 35, prompt at most 20, grounding at most 25, and a decline reason at most 25. A reason longer than that is cut off mid-sentence when it reaches the principal, so finish the thought inside the limit.
+
+Never wrap the principal's note in quotation marks when you refer to it. Put it in your own words. A quotation mark that loses its partner reads as a typo in the first line they see.
 
 Output shape. When you can tailor: set "tailored" to true, leave "reason" as an empty string, and fill title, body, tryIt, prompt and grounding. When you decline under rule 3 or 4: set "tailored" to false, put the one-sentence reason in "reason", and leave the other five fields as empty strings.`;

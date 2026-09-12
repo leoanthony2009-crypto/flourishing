@@ -15,7 +15,7 @@ const BASE = {
 const MORE = {
   checklist: ['List every recurring demand this half-term', 'Mark each essential, habitual or inherited', 'Pause one habitual demand and tell staff why'],
   idea: { title: 'Run a quiet week', body: 'Cancel one standing meeting and replace it with a short written update.' },
-  peer: 'Other Bloom schools have found value in naming one pause per half-term openly with staff, so the relief is shared rather than private.',
+  peer: 'Other Bloom schools have found value in naming one pause per half-term openly with staff, so the relief is shared rather than private. Ask the central team for the anonymised approaches that have travelled well.',
   resource: { title: 'Stop / Delegate / Protect planner', lines: ['Stop: one task we will pause is ___', 'Delegate: one task, one named person, one check-in date'] },
 };
 const NOTE = 'Two teachers are out on sick leave and cover keeps falling on the same three people in the Form 3 team.';
@@ -37,6 +37,9 @@ const checks = {
 
   // 2. COLLEAGUES — the curated peer line, the network count, the shared checklist.
   carriesPeerPractice: m.includes('naming one pause per half-term'),
+  // The "Ask the central team" call-to-action belongs in the Across Bloom sheet, not in a
+  // brief demanding one action finishable today — it invites a referral as the answer.
+  dropsReferralTrailer: !/Ask the central team/i.test(m),
   carriesNetworkCount: m.includes('3 of 5 Bloom schools chose this theme this week'),
   carriesTrend:        m.includes('(rising on last week)'),
   carriesChecklist:    m.includes('Mark each essential, habitual or inherited'),
@@ -72,9 +75,17 @@ checks.acceptsCleanAnswer  = !ungrounded('Ask the Form 3 team which duty to paus
 // Word limits are enforced server-side whatever the model returns.
 checks.clampsLongTitle = clean('one two three four five six seven eight nine ten', 7).split(' ').length === 7;
 checks.stripsQuotes    = clean('“Protect one block', 7) === 'Protect one block';
+// The real failure: the model echoed the closing quote of the note we sent verbatim.
+checks.dropsOrphanQuote = clean('Teaching pupils with SEND" is too broad to see', 12) === 'Teaching pupils with SEND is too broad to see';
+// A balanced pair is left alone.
+checks.keepsBalancedQuotes = clean('She said "no" twice', 10) === 'She said "no" twice';
 // An unknown impact value must read as "not shared", never as itself.
 checks.unknownImpactSafe = compose({ topic:'workload', impact:'<script>', note:NOTE, base:BASE, more:MORE, signal:SIGNAL })
   .userMsg.includes('How much it is affecting them: not shared');
+// Safeguarding's line ends in a statutory caveat, not a referral. That must survive.
+checks.keepsStatutoryCaveat = compose({ topic:'safeguarding', impact:'a_lot', note:NOTE, base:BASE,
+  more:{ peer:'Practice shared across Bloom centres on short scenario briefings. Nothing here replaces your statutory procedures.' }, signal:{} })
+  .userMsg.includes('Nothing here replaces your statutory procedures');
 
 // Safeguarding is in the enum (it is blocked by topic, not by omission).
 checks.safeguardingIsAKnownTopic = TOPICS.has('safeguarding');
