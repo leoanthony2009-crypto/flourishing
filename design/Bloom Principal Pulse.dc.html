@@ -882,6 +882,10 @@ class Component extends DCLogic {
     // executing when this mounts, so wait for it rather than declaring it missing.
     this.whenApiReady(ok => {
       if (!ok) { this.setState({ authStatus:'signed_out', authError:'This build has no Supabase configuration.' }); return; }
+      // A link that failed sends the reason back in the fragment. Without this the person is
+      // returned to a blank sign-in screen and left to guess why their link did nothing.
+      const linkError = BloomAPI.authUrlError ? BloomAPI.authUrlError() : '';
+      if (linkError) this.setState({ authError: linkError });
       BloomAPI.onAuthChange(session => this.onSession(session));
       BloomAPI.getSession().then(session => this.onSession(session)).catch(() => this.setState({ authStatus:'signed_out' }));
     });

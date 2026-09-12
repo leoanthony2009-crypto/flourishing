@@ -91,7 +91,7 @@ npm run build          # rebuild deploy/index.html from design/
 npm run verify-build   # assert the transform reproduces the originally shipped bundle
 npm run check-bundle   # assert the committed bundle matches design/
 npm run serve          # http://127.0.0.1:8765
-npm run smoke          # eight Playwright suites (needs `npm run serve` in another shell)
+npm run smoke          # nine Playwright suites (needs `npm run serve` in another shell)
 ```
 
 `npm run smoke` drives the built bundle in a real browser. Only `BloomAPI`'s network calls are
@@ -104,6 +104,7 @@ stubbed; the component, its state and the whole template are the real thing.
 | `inbox-render.mjs` | inbox cards, sorting, filters, save and rollback |
 | `rescue.mjs` | the "the link didn't work" paste flow and its error copy |
 | `link-safety.mjs` | the **real** `completeSignIn` against foreign links and tokens |
+| `link-error.mjs` | what a *failed* link's redirect shows, from live `#error=` shapes |
 | `app-signed-in.mjs` | all four steps as a signed-in principal |
 | `sheets.mjs` | every support sheet, the urgent request, the PDF export |
 | `timezone.mjs` | the week written is a Monday from UTC-11 to UTC+14 |
@@ -310,17 +311,23 @@ Two settings, both in the Supabase dashboard, both unavailable to the tooling he
    `tailor` returns `{status:'error'}` on every call. The client already degrades correctly:
    it shows the evidence-based default idea with an explanation, so nothing looks broken.
 
-2. **Auth URL configuration** — Authentication → URL Configuration. Set *Site URL* to
-   `https://flourishing-sage.vercel.app` and add `https://flourishing-sage.vercel.app/**` to
-   *Redirect URLs*. The default is `http://localhost:3000`, so
-   until this is set the link in the email sends people to localhost.
+2. ~~**Auth URL configuration**~~ — **done.** *Site URL* is
+   `https://flourishing-sage.vercel.app` and the app is on the *Redirect URLs* list. Verified
+   against the live `/auth/v1/verify` endpoint with a deliberately invalid token, which makes
+   GoTrue redirect straight back with an error rather than sending mail or spending a real one:
 
-   This is no longer a hard blocker: the sign-in screen has a **"The link didn't work"**
-   fallback. Paste either the link from the email or the address it opened, and the app
-   exchanges it for a session directly (`verifyOtp` on the token, or `setSession` when the
-   address already carries one in its fragment) — no redirect involved. Worth setting anyway,
-   so the link just works and nobody has to copy anything. The fallback also covers email
-   clients that rewrite or pre-fetch links, which consumes a one-time token.
+   | Probe | Redirected to |
+   |---|---|
+   | `redirect_to` = the app, as the client sends it | `https://flourishing-sage.vercel.app/index.html#error=…` |
+   | no `redirect_to` — shows the Site URL | `https://flourishing-sage.vercel.app#error=…` |
+   | `redirect_to` = `https://evil.example/steal` | fell back to the app, **not** evil.example |
+
+   The last row matters: the allow-list is doing its job, so a crafted `redirect_to` cannot
+   bounce a freshly minted session to somebody else's server.
+
+   The **"The link didn't work"** fallback stays. It still covers email clients that rewrite
+   or pre-fetch links — which silently consumes a one-time token — and it is now reachable
+   before sending anything, as *"I already have a sign-in link"* on the sign-in screen.
 
 Then, to bring people on:
 
