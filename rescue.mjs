@@ -23,6 +23,22 @@ await page.evaluate(() => {
   };
 });
 
+// Before anything is sent: someone who already has a link (in a dead tab, or sitting in
+// their inbox) must be able to use it without asking for another one. The built-in mailer
+// rate-limits to roughly one an hour, so "send another to reach the rescue box" can fail
+// outright — which would leave a person with a working link and no way to spend it.
+await page.evaluate(() => document.evaluate(
+  "//button[contains(., 'I already have a sign-in link')]", document, null, 9, null).singleNodeValue?.click());
+await page.waitForTimeout(400);
+const beforeSending = await page.evaluate(() => ({
+  reachable: !!document.querySelector('#paste-link'),
+  stillOnSignIn: !!document.querySelector('#signin-email'),
+}));
+console.log('before sending:', JSON.stringify(beforeSending));
+await page.evaluate(() => document.evaluate(
+  "//button[contains(., 'I already have a sign-in link')]", document, null, 9, null).singleNodeValue?.click());
+await page.waitForTimeout(300);
+
 await page.fill('#signin-email', 'principal.arima@bloom.tt');
 await page.click('button:has-text("Send me a sign-in link")');
 await page.waitForTimeout(600);
@@ -77,7 +93,8 @@ console.log('good link ->', JSON.stringify(ok));
 await page.screenshot({ path: '/tmp/rescue.png' });
 await browser.close();
 
-const pass = sent.checkEmail && sent.hasDisclosure && sent.pasteFieldHidden
+const pass = beforeSending.reachable && beforeSending.stillOnSignIn
+  && sent.checkEmail && sent.hasDisclosure && sent.pasteFieldHidden
   && opened.pasteFieldShown && opened.buttonDisabledWhenEmpty === true && opened.warnsAboutForeignLinks
   && /doesn’t look like a sign-in link/.test(bad || '')
   && /already been used or has expired/.test(expired || '')

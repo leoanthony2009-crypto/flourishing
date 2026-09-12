@@ -405,6 +405,23 @@ textarea{resize:none}
     </div>
     </sc-if>
 
+    <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
+    <div style="border-top:1px solid #E6E2EB;padding-top:12px;">
+      <button type="button" onClick="{{ togglePaste }}" aria-expanded="{{ pasteOpen }}" style="display:flex;align-items:center;gap:6px;min-height:32px;padding:0;border:none;background:transparent;color:#1E3A78;font-size:13px;font-weight:600;" style-focus="outline:3px solid #1E3A78;outline-offset:2px">I already have a sign-in link</button>
+        <sc-if value="{{ pasteOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+          <label for="paste-link" style="font-size:13px;line-height:1.45;color:#666A80;">Copy the link from the email — or the address it opened — and paste it here.</label>
+          <p style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">Only paste a link from an email Bloom sent to you. A link from anyone else can sign you into <em>their</em> account, and your pulse would go to their school.</p>
+          <input id="paste-link" type="text" inputMode="url" autoComplete="off" placeholder="https://…" value="{{ pasteValue }}" onChange="{{ setPaste }}" style="display:block;width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border-radius:12px;border:1.5px solid #D8D2E4;background:#FFFEF9;color:#14224A;font-size:14px;outline:none;" style-focus="border-color:#1E3A78;box-shadow:0 0 0 3px #F0ECF6" />
+          <sc-if value="{{ pasteError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" style="margin:0;font-size:13px;line-height:1.45;color:#8A6614;">{{ pasteErrorText }}</p>
+          </sc-if>
+          <button type="button" onClick="{{ submitPaste }}" disabled="{{ pasteDisabled }}" style="min-height:44px;border-radius:999px;border:none;background:{{ pasteBtnBg }};color:{{ pasteBtnFg }};font-size:14px;font-weight:600;" style-focus="outline:3px solid #14224A;outline-offset:2px">{{ pasteBtnLabel }}</button>
+        </div>
+        </sc-if>
+    </div>
+    </sc-if>
+
     <sc-if value="{{ authSent }}" hint-placeholder-val="{{ false }}">
     <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;border:1.5px solid #D8D2E4;background:#FFFEF9;">
       <div style="font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-weight:500;font-size:19px;line-height:1.2;color:#14224A;">Check your email</div>
