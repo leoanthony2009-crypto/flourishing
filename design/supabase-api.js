@@ -40,6 +40,26 @@
     return res ? res.data : null;
   }
 
+  // What people can actually paste is rarely a clean URL: mail clients wrap it in <>, some
+  // copy the address bar of a page that never loaded (no scheme), and a fragment copied on
+  // its own has no host at all. None of those are bad links, and rejecting them sends someone
+  // back to an inbox for a second link that will fail exactly the same way.
+  function normaliseLink(pasted) {
+    var v = String(pasted || '').trim().replace(/\s+/g, '')
+      .replace(/^[<("']+/, '').replace(/[>)"']+$/, '');
+    if (!v) return '';
+    // A fragment on its own — "#access_token=…" or just "access_token=…". The host is never
+    // read on that path, so any placeholder host will do.
+    if (v.charAt(0) === '#') return 'https://pasted.invalid/' + v;
+    if (/^access_token=/.test(v)) return 'https://pasted.invalid/#' + v;
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) return v;
+    // Scheme-less, but only if it still looks like an address: a host followed by a path,
+    // query or fragment, or a bare domain. Plain prose must stay a bad link, or "hello"
+    // becomes https://hello and gets answered with "that link wasn't sent by Bloom".
+    if (/^[^/?#]+[/?#]/.test(v) || /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(v)) return 'https://' + v;
+    return v;
+  }
+
   // Reads the `iss` claim of an access token without trusting it for anything else — the
   // server still validates the signature. This only decides whether a pasted token is even
   // worth handing to setSession, so a malformed one is simply "not ours".
@@ -93,7 +113,7 @@
     completeSignIn: async function (pasted) {
       var c = await ready(); if (!c) throw new Error('offline');
       var url, project;
-      try { url = new URL(String(pasted || '').trim()); } catch (e) { throw new Error('bad_link'); }
+      try { url = new URL(normaliseLink(pasted)); } catch (e) { throw new Error('bad_link'); }
       try { project = new URL(CONFIG.url).origin; } catch (e) { throw new Error('offline'); }
 
       // Already-verified link: the session is sitting in the fragment.
@@ -119,9 +139,21 @@
       if (url.origin !== project) throw new Error('foreign_link');
       var token = url.searchParams.get('token_hash') || url.searchParams.get('token');
       if (!token) throw new Error('bad_link');
-      var res = await c.auth.verifyOtp({ token_hash: token, type: url.searchParams.get('type') || 'magiclink' });
-      if (res.error) throw res.error;
-      return res.data;
+
+      // The type decides which table GoTrue looks the token up in, and getting it wrong reads
+      // as "invalid or expired" — indistinguishable, to the person pasting, from a dead link.
+      // A first-time sign-in arrives as type=signup (the "Confirm your email address" mail),
+      // not magiclink, so try the type the link carries and then the others rather than
+      // telling someone their perfectly good link is expired.
+      var types = [url.searchParams.get('type'), 'magiclink', 'signup', 'email']
+        .filter(function (t, i, a) { return t && a.indexOf(t) === i; });
+      var last = null;
+      for (var i = 0; i < types.length; i++) {
+        var res = await c.auth.verifyOtp({ token_hash: token, type: types[i] });
+        if (!res.error) return res.data;
+        last = res.error;
+      }
+      throw last;
     },
     // Returns {profile} when the row exists, {absent:true} when the user is genuinely not on
     // the pilot list, {failed:true} when we could not find out. Collapsing the last two would
